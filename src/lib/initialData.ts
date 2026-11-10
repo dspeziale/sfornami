@@ -392,3 +392,4 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   pickupOpeningHours: 'Mar - Sab: 07:30 - 19:30 | Dom: 08:00 - 13:30 | Lunedì: Chiuso',
   specialNotice: 'Tutti gli impasti sono a lenta lievitazione naturale (da 24 a 48 ore).',
 };
+

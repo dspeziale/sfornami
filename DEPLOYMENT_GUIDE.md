@@ -71,3 +71,4 @@ Se in futuro si desidera inviare notifiche WhatsApp automatiche silenziose:
 2. Crea un'app di tipo **Business** e aggiungi il prodotto **WhatsApp**.
 3. Verifica il numero di telefono del laboratorio.
 4. Inserisci le chiavi API nel webhook del backend per l'invio delle notifiche push.
+

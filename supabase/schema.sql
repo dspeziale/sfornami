@@ -149,3 +149,4 @@ CREATE POLICY "Admin full access orders" ON public.orders FOR ALL TO authenticat
 CREATE POLICY "Admin full access order_items" ON public.order_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Admin full access cake_requests" ON public.custom_cake_requests FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Admin full access settings" ON public.store_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
+

@@ -162,3 +162,4 @@ export interface AllergenMeta {
   icon: string;
   description: string;
 }
+

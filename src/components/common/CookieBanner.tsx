@@ -116,3 +116,4 @@ export const CookieBanner: React.FC = () => {
     </div>
   );
 };
+

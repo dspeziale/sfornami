@@ -48,3 +48,4 @@ export const WhatsAppFloatingButton: React.FC = () => {
     </div>
   );
 };
+

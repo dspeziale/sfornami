@@ -291,11 +291,10 @@ export default function CheckoutPage() {
                   setDeliveryType('pickup');
                   setPaymentMethod('pickup');
                 }}
-                className={`p-5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between space-y-2 ${
-                  deliveryType === 'pickup'
+                className={`p-5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between space-y-2 ${deliveryType === 'pickup'
                     ? 'bg-[#FFE29A]/50 border-[#DE7E42] shadow-sm'
                     : 'bg-[#FFF8EF]/50 border-[#F5A16C]/25 hover:bg-white'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[#57382E]">
@@ -318,11 +317,10 @@ export default function CheckoutPage() {
                   setDeliveryType('delivery');
                   setPaymentMethod('cash_on_delivery');
                 }}
-                className={`p-5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between space-y-2 ${
-                  deliveryType === 'delivery'
+                className={`p-5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between space-y-2 ${deliveryType === 'delivery'
                     ? 'bg-[#FFE29A]/50 border-[#DE7E42] shadow-sm'
                     : 'bg-[#FFF8EF]/50 border-[#F5A16C]/25 hover:bg-white'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[#57382E]">

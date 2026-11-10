@@ -132,3 +132,4 @@ Per garantire la lievitazione naturale (24-48 ore), il sistema imposta per impos
 
 **Posso cambiare la password di accesso?**
 Sì, collegando il database Supabase le credenziali sono modificabili direttamente dalla tabella utenti o dalle variabili d'ambiente.
+

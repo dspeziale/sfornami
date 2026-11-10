@@ -214,11 +214,10 @@ export default function TortePersonalizzatePage() {
                     key={type.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, cakeType: type.name })}
-                    className={`p-4 rounded-2xl text-left border transition-all ${
-                      formData.cakeType === type.name
+                    className={`p-4 rounded-2xl text-left border transition-all ${formData.cakeType === type.name
                         ? 'bg-[#FFE29A] border-[#DE7E42] shadow-sm'
                         : 'bg-[#FFF8EF]/50 border-[#F5A16C]/20 hover:bg-white'
-                    }`}
+                      }`}
                   >
                     <p className="text-xs font-black text-[#57382E]">{type.name}</p>
                     <p className="text-[11px] text-[#7E5649] mt-0.5">{type.desc}</p>
@@ -239,11 +238,10 @@ export default function TortePersonalizzatePage() {
                     key={n}
                     type="button"
                     onClick={() => setFormData({ ...formData, servings: n })}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      formData.servings === n
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${formData.servings === n
                         ? 'bg-[#F28BA6] text-white border-[#F28BA6] shadow-xs'
                         : 'bg-[#FFF8EF] text-[#57382E] border-[#F5A16C]/30 hover:bg-white'
-                    }`}
+                      }`}
                   >
                     {n} persone (~{(n * 0.12).toFixed(1)} kg)
                   </button>

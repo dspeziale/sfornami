@@ -164,3 +164,4 @@ export interface WhatsAppCloudApiPayload {
     components: unknown[];
   };
 }
+

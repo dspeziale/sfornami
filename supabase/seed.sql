@@ -25,3 +25,4 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.store_settings (id, store_name, payoff, address, city, cap, phone, whatsapp_number, email, instagram_handle, facebook_url, delivery_enabled, min_order_delivery, delivery_fee, free_delivery_threshold)
 VALUES (1, 'SFORNAMÌ', 'Il buono fatto a mano, con un pizzico di felicità.', 'Via dei Banchi Vecchi, 48', 'Roma', '00186', '+39 06 6880 1234', '393401234567', 'ordini@sfornami.it', '@sfornami_roma', 'https://facebook.com/sfornamiroma', true, 15.00, 3.50, 40.00)
 ON CONFLICT (id) DO NOTHING;
+
