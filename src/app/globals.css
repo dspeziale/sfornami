@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-strawberry: #F28BA6;
+  --color-brand-strawberry-dark: #D86B86;
+  --color-brand-strawberry-light: #FDE8ED;
+  --color-brand-butter: #FFE29A;
+  --color-brand-butter-dark: #F5CE68;
+  --color-brand-peach: #F5A16C;
+  --color-brand-peach-dark: #DE7E42;
+  --color-brand-peach-light: #FEEFE6;
+  --color-brand-mint: #A8D8BD;
+  --color-brand-mint-dark: #7DBE98;
+  --color-brand-mint-light: #EEF8F3;
+  --color-brand-cream: #FFF8EF;
+  --color-brand-cream-card: #FFFFFF;
+  --color-brand-cacao: #57382E;
+  --color-brand-cacao-light: #7E5649;
+  --color-brand-cacao-muted: #9E7D73;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #FFF8EF;
+  --foreground: #57382E;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbars with brand cacao */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FFF8EF;
+}
+::-webkit-scrollbar-thumb {
+  background: #DE7E42;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #57382E;
+}
+
+/* Animations and decorative helpers */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseSlow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+/* Print styling for receipts */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
 }
