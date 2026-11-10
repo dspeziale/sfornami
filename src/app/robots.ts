@@ -12,3 +12,4 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: 'https://sfornami.dsc-italy.app/sitemap.xml',
   };
 }
+

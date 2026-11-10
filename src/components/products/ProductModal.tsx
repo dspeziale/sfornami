@@ -19,8 +19,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [addedAnimation, setAddedAnimation] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   if (!product) return null;
+
+  const galleryImages = product.images && product.images.length > 0
+    ? product.images
+    : [product.imageUrl];
+  const activeImageUrl = galleryImages[activeImageIndex] || product.imageUrl;
 
   const currentPrice = product.price + (selectedVariant?.priceModifier || 0);
 
@@ -50,17 +56,39 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* Image */}
-          <div className="relative h-64 md:h-full min-h-[260px] bg-[#FFE29A]/30">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-            {product.badge && (
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#F28BA6] text-white font-black text-xs uppercase tracking-wider shadow-md">
-                {product.badge}
-              </span>
+          {/* Image & Gallery */}
+          <div className="relative flex flex-col bg-[#FFE29A]/30">
+            <div className="relative h-64 md:h-full min-h-[260px]">
+              <img
+                src={activeImageUrl}
+                alt={product.name}
+                className="w-full h-full object-cover transition-all duration-300"
+              />
+              {product.badge && (
+                <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#F28BA6] text-white font-black text-xs uppercase tracking-wider shadow-md">
+                  {product.badge}
+                </span>
+              )}
+            </div>
+
+            {/* Gallery Thumbnails (if multiple images uploaded) */}
+            {galleryImages.length > 1 && (
+              <div className="p-3 bg-white/70 backdrop-blur-xs border-t border-[#F5A16C]/30 flex items-center gap-2 overflow-x-auto">
+                {galleryImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                      activeImageIndex === idx
+                        ? 'border-[#DE7E42] scale-105 shadow-md ring-2 ring-[#DE7E42]/20'
+                        : 'border-[#F5A16C]/30 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 

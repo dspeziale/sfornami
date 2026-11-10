@@ -25,3 +25,4 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1.0 : route.startsWith('/torte') || route.startsWith('/panetteria') ? 0.9 : 0.7,
   }));
 }
+

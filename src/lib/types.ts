@@ -42,6 +42,7 @@ export interface Product {
   weight?: string;
   variants?: ProductVariant[];
   imageUrl: string;
+  images?: string[]; // Multiple uploaded product photographs
   isAvailable: boolean;
   isFeatured?: boolean;
   isWeeklySpecial?: boolean;

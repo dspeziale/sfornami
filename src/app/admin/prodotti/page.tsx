@@ -14,6 +14,9 @@ import {
   ToggleRight,
   Eye,
   AlertCircle,
+  Upload,
+  Image as ImageIcon,
+  Star,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
 import { Allergen, Product, ProductCategory } from '@/lib/types';
@@ -41,12 +44,106 @@ export default function AdminProdottiPage() {
   const [formUnit, setFormUnit] = useState('Al pezzo');
   const [formWeight, setFormWeight] = useState('500g');
   const [formImageUrl, setFormImageUrl] = useState('');
+  const [formImages, setFormImages] = useState<string[]>([]);
+  const [customUrlInput, setCustomUrlInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formIsAvailable, setFormIsAvailable] = useState(true);
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formIsWeeklySpecial, setFormIsWeeklySpecial] = useState(false);
   const [formIsSeasonal, setFormIsSeasonal] = useState(false);
   const [formDailyQuota, setFormDailyQuota] = useState<number>(30);
   const [formBadge, setFormBadge] = useState('');
+
+  // Helper client-side image resizer to keep storage optimized and fast
+  const resizeImageFile = (file: File, maxDim = 1200, quality = 0.85): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = event => {
+        const img = new window.Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(event.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFilesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+
+    const newImgs: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const resized = await resizeImageFile(files[i]);
+        newImgs.push(resized);
+      } catch (err) {
+        console.warn('Errore lettura immagine:', err);
+      }
+    }
+
+    setFormImages(prev => {
+      const updated = [...prev, ...newImgs];
+      if (updated.length > 0 && !formImageUrl) {
+        setFormImageUrl(updated[0]);
+      }
+      return updated;
+    });
+
+    setUploadingImage(false);
+    e.target.value = '';
+  };
+
+  const handleAddCustomUrl = () => {
+    if (!customUrlInput.trim()) return;
+    setFormImages(prev => [...prev, customUrlInput.trim()]);
+    if (!formImageUrl) setFormImageUrl(customUrlInput.trim());
+    setCustomUrlInput('');
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormImages(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      if (formImageUrl === prev[index]) {
+        setFormImageUrl(updated[0] || '');
+      }
+      return updated;
+    });
+  };
+
+  const handleSetPrimary = (index: number) => {
+    setFormImages(prev => {
+      const item = prev[index];
+      const without = prev.filter((_, i) => i !== index);
+      const reordered = [item, ...without];
+      setFormImageUrl(item);
+      return reordered;
+    });
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -72,6 +169,8 @@ export default function AdminProdottiPage() {
     setFormUnit('Al pezzo');
     setFormWeight('500g');
     setFormImageUrl('https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80');
+    setFormImages(['https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80']);
+    setCustomUrlInput('');
     setFormIsAvailable(true);
     setFormIsFeatured(false);
     setFormIsWeeklySpecial(false);
@@ -93,7 +192,12 @@ export default function AdminProdottiPage() {
     setFormPrice(product.price);
     setFormUnit(product.unit);
     setFormWeight(product.weight || '');
-    setFormImageUrl(product.imageUrl);
+    const initialImgs = product.images && product.images.length > 0
+      ? product.images
+      : product.imageUrl ? [product.imageUrl] : [];
+    setFormImages(initialImgs);
+    setFormImageUrl(product.imageUrl || initialImgs[0] || '');
+    setCustomUrlInput('');
     setFormIsAvailable(product.isAvailable);
     setFormIsFeatured(Boolean(product.isFeatured));
     setFormIsWeeklySpecial(Boolean(product.isWeeklySpecial));
@@ -118,6 +222,7 @@ export default function AdminProdottiPage() {
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const slug = formSlug.trim() || formName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const mainImg = formImages[0] || formImageUrl || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80';
     const productData: Product = {
       id: editingProduct ? editingProduct.id : `prod-${Date.now()}`,
       slug,
@@ -130,7 +235,8 @@ export default function AdminProdottiPage() {
       price: Number(formPrice),
       unit: formUnit,
       weight: formWeight || undefined,
-      imageUrl: formImageUrl,
+      imageUrl: mainImg,
+      images: formImages.length > 0 ? formImages : [mainImg],
       isAvailable: formIsAvailable,
       isFeatured: formIsFeatured,
       isWeeklySpecial: formIsWeeklySpecial,
@@ -436,16 +542,103 @@ export default function AdminProdottiPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="font-bold text-[#57382E] block mb-1">URL Fotografia Prodotto*</label>
-                <input
-                  type="url"
-                  required
-                  value={formImageUrl}
-                  onChange={e => setFormImageUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-mono"
-                />
+              {/* Caricamento Immagini Multiple */}
+              <div className="space-y-3 p-4 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/30">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#57382E] text-xs flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-[#DE7E42]" />
+                    <span>Fotografie del Prodotto (una o più immagini)*</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-[#7E5649]">
+                    {formImages.length} {formImages.length === 1 ? 'foto caricata' : 'foto caricate'}
+                  </span>
+                </div>
+
+                {/* Upload Button & Dropzone */}
+                <div className="relative border-2 border-dashed border-[#F5A16C]/40 rounded-2xl p-4 text-center hover:bg-white/80 transition-colors bg-white/50">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFilesUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    title="Seleziona una o più foto dal dispositivo"
+                  />
+                  <div className="flex flex-col items-center gap-1 text-xs text-[#7E5649]">
+                    <div className="w-10 h-10 rounded-full bg-[#FFE29A] text-[#DE7E42] flex items-center justify-center mb-1">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <p className="font-black text-[#57382E]">
+                      {uploadingImage ? 'Elaborazione foto in corso...' : 'Trascina o clicca per caricare una o più foto'}
+                    </p>
+                    <p className="text-[10px] text-[#9E7D73]">
+                      Puoi selezionare più file contemporaneamente (JPEG, PNG, WebP) dallo smartphone o PC.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Optional URL addition */}
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={customUrlInput}
+                    onChange={e => setCustomUrlInput(e.target.value)}
+                    placeholder="Oppure incolla URL esterno (es. https://...)"
+                    className="flex-1 px-3 py-1.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomUrl}
+                    className="px-3 py-1.5 rounded-xl bg-[#57382E] hover:bg-[#7E5649] text-white text-xs font-bold"
+                  >
+                    Aggiungi URL
+                  </button>
+                </div>
+
+                {/* Image Gallery Thumbnails */}
+                {formImages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                    {formImages.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className={`relative group rounded-xl overflow-hidden aspect-square border-2 ${
+                          idx === 0 ? 'border-[#DE7E42] shadow-md ring-2 ring-[#DE7E42]/20' : 'border-[#F5A16C]/30 bg-white'
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+
+                        {/* Primary badge */}
+                        {idx === 0 ? (
+                          <span className="absolute top-1 left-1 px-2 py-0.5 rounded-md bg-[#DE7E42] text-white text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                            <Star className="w-2.5 h-2.5 fill-white" /> Copertina
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimary(idx)}
+                            className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 rounded-md bg-black/70 hover:bg-[#DE7E42] text-white text-[9px] font-bold shadow-sm"
+                          >
+                            Rendi Principale
+                          </button>
+                        )}
+
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center opacity-80 group-hover:opacity-100 shadow-sm transition-opacity"
+                          title="Rimuovi foto"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Toggles */}
