@@ -30,7 +30,7 @@ export default function AdminImpostazioniPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-black uppercase tracking-wider text-[#DE7E42]">
-            Configurazione Negozio
+            Configurazione Laboratorio (Torraccia, Roma)
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-[#57382E]">
             Impostazioni Laboratorio SFORNAMÌ

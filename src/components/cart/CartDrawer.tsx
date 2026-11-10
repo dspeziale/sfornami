@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, MessageCircle, Tag, Check } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 import { generateWhatsAppOrderMessage } from '@/lib/whatsapp';
-import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -26,6 +26,8 @@ export const CartDrawer: React.FC = () => {
   const [promoInput, setPromoInput] = useState('');
   const [promoFeedback, setPromoFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
+  const { settings } = useSettings();
+
   if (!isCartOpen) return null;
 
   const total = Math.max(0, subtotal - discount);
@@ -38,17 +40,17 @@ export const CartDrawer: React.FC = () => {
     if (res.success) setPromoInput('');
   };
 
-  // Direct WhatsApp order link from current cart
+  // Direct WhatsApp order link from current cart with delivery
   const waUrl = generateWhatsAppOrderMessage({
     items,
     customerName: 'Cliente dal Sito',
-    deliveryType: 'pickup',
+    deliveryType: 'delivery',
     requestedDate: 'Da concordare',
-    requestedTimeSlot: 'Da concordare',
+    requestedTimeSlot: 'Consegna a Domicilio Roma',
     subtotal,
-    deliveryFee: 0,
-    total,
-    settings: INITIAL_STORE_SETTINGS,
+    deliveryFee: subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee,
+    total: subtotal >= settings.freeDeliveryThreshold ? total : total + settings.deliveryFee,
+    settings,
   });
 
   return (

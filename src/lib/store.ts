@@ -313,6 +313,9 @@ export const DataService = {
       }
     }
     setLocalItem(STORAGE_KEYS.SETTINGS, settings);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sfornami_settings_updated', { detail: settings }));
+    }
     return settings;
   },
 

@@ -99,7 +99,7 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black tracking-wide shadow-xs">
                 <Sparkles className="w-4 h-4 text-[#DE7E42]" />
-                <span>FORNO E PASTICCERIA ARTIGIANALE A ROMA</span>
+                <span>LABORATORIO ARTIGIANALE • CONSEGNA A DOMICILIO A ROMA</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#57382E] tracking-tight leading-[1.1]">
@@ -144,8 +144,8 @@ export default function HomePage() {
                   <p className="text-[11px] text-[#7E5649] font-semibold">Lenta Lievitazione</p>
                 </div>
                 <div>
-                  <p className="text-lg md:text-xl font-black text-[#57382E]">Roma Centro</p>
-                  <p className="text-[11px] text-[#7E5649] font-semibold">Ritiro o Consegna</p>
+                  <p className="text-lg md:text-xl font-black text-[#57382E]">Torraccia (00156)</p>
+                  <p className="text-[11px] text-[#7E5649] font-semibold">Solo Consegna a Domicilio</p>
                 </div>
               </div>
             </div>
@@ -528,9 +528,9 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-full bg-[#A8D8BD] text-[#57382E] font-black text-lg flex items-center justify-center mx-auto shadow-md">
                 3
               </div>
-              <h4 className="text-lg font-black text-[#57382E]">Ritira in Forno o a Casa</h4>
+              <h4 className="text-lg font-black text-[#57382E]">Consegna Diretta a Casa</h4>
               <p className="text-xs text-[#7E5649] leading-relaxed">
-                Passa a ritirare senza attese in Via dei Banchi Vecchi a Roma o ricevi il tuo ordine caldo comodamente a domicilio.
+                Dal nostro laboratorio artigianale nel quartiere Torraccia (00156 Roma) direttamente a casa tua: ricevi il tuo ordine caldo e fragrante a domicilio.
               </p>
             </div>
           </div>

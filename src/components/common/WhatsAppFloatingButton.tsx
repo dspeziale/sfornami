@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
-import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
+import { useSettings } from '@/context/SettingsContext';
 
 export const WhatsAppFloatingButton: React.FC = () => {
   const [showTooltip, setShowTooltip] = useState(true);
+  const { getWhatsAppLink } = useSettings();
 
-  const waLink = `https://wa.me/${INITIAL_STORE_SETTINGS.whatsappNumber}?text=${encodeURIComponent(
-    'Ciao SFORNAMÌ! Vorrei fare un ordine o chiedere informazioni sulle vostre bontà artigianali.'
-  )}`;
+  const waLink = getWhatsAppLink(
+    'Ciao SFORNAMÌ! Vorrei fare un ordine con consegna a domicilio o chiedere informazioni sulle vostre bontà appena sfornate.'
+  );
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2 group">
@@ -19,7 +20,7 @@ export const WhatsAppFloatingButton: React.FC = () => {
           <span className="text-lg">👋</span>
           <div>
             <p className="font-bold text-[#57382E]">Hai voglia di qualcosa di buono?</p>
-            <p className="text-[11px] text-[#7E5649]">Scrivici su WhatsApp per info o ordini veloci!</p>
+            <p className="text-[11px] text-[#7E5649]">Scrivici su WhatsApp per info o ordini con consegna a domicilio!</p>
           </div>
           <button
             onClick={e => {
@@ -48,4 +49,3 @@ export const WhatsAppFloatingButton: React.FC = () => {
     </div>
   );
 };
-

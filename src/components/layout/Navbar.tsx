@@ -3,14 +3,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, MessageCircle, Menu, X, Clock, MapPin, Sparkles, ChevronRight } from 'lucide-react';
+import { ShoppingBag, MessageCircle, Menu, X, Truck, Sparkles, ChevronRight, PackageCheck } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { useCart } from '@/context/CartContext';
-import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
+import { useSettings } from '@/context/SettingsContext';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { totalItemsCount, toggleCart } = useCart();
+  const { getWhatsAppLink } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -22,9 +23,9 @@ export const Navbar: React.FC = () => {
     { name: 'Contatti', href: '/contatti' },
   ];
 
-  const waLink = `https://wa.me/${INITIAL_STORE_SETTINGS.whatsappNumber}?text=${encodeURIComponent(
-    'Ciao SFORNAMÌ! Vorrei informazioni sulle vostre bontà appena sfornate.'
-  )}`;
+  const waLink = getWhatsAppLink(
+    'Ciao SFORNAMÌ! Vorrei informazioni sulle vostre bontà artigianali e ordinare con consegna a domicilio.'
+  );
 
   return (
     <>
@@ -37,17 +38,17 @@ export const Navbar: React.FC = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DE7E42]"></span>
             </span>
             <span className="truncate">
-              🥖 Sforniamo fresco ogni mattina • Lievito madre vivo e farine macinate a pietra a Roma
+              🥖 Laboratorio artigianale di panetteria e pasticceria a Roma • Solo ordini online con consegna a domicilio
             </span>
           </div>
           <div className="hidden md:flex items-center gap-4 text-[11px] font-bold">
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-[#DE7E42]" />
-              {INITIAL_STORE_SETTINGS.address}, Roma
+            <span className="flex items-center gap-1 text-[#DE7E42]">
+              <Truck className="w-3.5 h-3.5" />
+              Solo Consegna a Domicilio a Roma
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[#DE7E42]" />
-              Aperti Mar - Dom
+            <span className="flex items-center gap-1 text-[#57382E]">
+              <PackageCheck className="w-3.5 h-3.5 text-[#DE7E42]" />
+              Consegne Mar - Dom
             </span>
             <Link href="/admin" className="hover:underline text-[#7E5649]">
               Area Riservata
@@ -78,13 +79,10 @@ export const Navbar: React.FC = () => {
                       : 'text-[#7E5649] hover:text-[#57382E] hover:bg-white/60'
                   } ${link.highlight ? 'text-[#DE7E42]' : ''}`}
                 >
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1.5">
                     {link.highlight && <Sparkles className="w-3.5 h-3.5 text-[#F28BA6]" />}
                     {link.name}
                   </span>
-                  {isActive && (
-                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F28BA6] rounded-full" />
-                  )}
                 </Link>
               );
             })}
@@ -123,7 +121,7 @@ export const Navbar: React.FC = () => {
               href="/menu"
               className="hidden sm:inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-[#F5A16C] hover:bg-[#DE7E42] text-white font-black text-xs md:text-sm tracking-wide shadow-md shadow-[#F5A16C]/30 transition-all hover:scale-105 active:scale-95"
             >
-              ORDINA ONLINE
+              ORDINA CON CONSEGNA
             </Link>
 
             {/* Mobile Hamburger Menu */}
@@ -170,7 +168,7 @@ export const Navbar: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 rounded-2xl bg-[#F5A16C] text-white text-center font-black text-sm shadow-md"
               >
-                SCOPRI IL CATALOGO E ORDINA
+                SCOPRI IL CATALOGO E ORDINA A DOMICILIO
               </Link>
               <a
                 href={waLink}
@@ -179,7 +177,7 @@ export const Navbar: React.FC = () => {
                 className="w-full py-3 rounded-2xl bg-[#25D366] text-white text-center font-bold text-sm shadow-md flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-4 h-4 fill-white" />
-                SCRIVICI SU WHATSAPP
+                ORDINA SU WHATSAPP
               </a>
               <Link
                 href="/admin"
@@ -195,4 +193,3 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
-

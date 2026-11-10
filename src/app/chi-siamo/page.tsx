@@ -29,7 +29,7 @@ export default function ChiSiamoPage() {
             <strong>SFORNAMÌ</strong> nasce da una passione autentica per l'arte bianca e la pasticceria fatta in casa: il profumo del burro che fonde al mattino presto, la crosta del pane che "canta" appena uscita dal forno a legna, e il rito sacro della domenica con i dolci di famiglia.
           </p>
           <p>
-            Nel nostro laboratorio nel centro storico di Roma, ogni impasto inizia con rispetto: selezioniamo grani antichi e farine 100% italiane macinate a pietra, ricche di crusca nobile e germe di grano vivo. Non utilizziamo additivi chimici né grassi idrogenati: soltanto uova fresche di galline allevate all’aperto, latte fresco intero, burro di fattoria e frutta di stagione.
+            Nel nostro laboratorio artigianale nel quartiere Torraccia a Roma (00156), ogni impasto inizia con rispetto: selezioniamo grani antichi e farine 100% italiane macinate a pietra, ricche di crusca nobile e germe di grano vivo. Non utilizziamo additivi chimici né grassi idrogenati: soltanto uova fresche di galline allevate all’aperto, latte fresco intero, burro di fattoria e frutta di stagione. Confezioniamo ogni ordine appena sfornato e lo consegniamo direttamente a domicilio.
           </p>
           <p>
             I testi e i dettagli di questa pagina sono pensati per essere personalizzati con la biografia e le fotografie reali della proprietaria e del team del laboratorio prima del lancio ufficiale.
@@ -46,7 +46,7 @@ export default function ChiSiamoPage() {
               href="/contatti"
               className="px-6 py-3.5 rounded-full bg-white border border-[#F5A16C]/40 text-[#57382E] font-bold text-xs sm:text-sm hover:bg-[#FFE29A]/30 transition-colors"
             >
-              Vieni a trovarci a Roma
+              Info e consegne a Roma
             </Link>
           </div>
         </div>

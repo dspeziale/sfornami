@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Trash2, Plus, Minus, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 import { generateWhatsAppOrderMessage } from '@/lib/whatsapp';
-import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 
 export default function CarrelloPage() {
   const {
@@ -20,6 +20,7 @@ export default function CarrelloPage() {
     removePromoCode,
   } = useCart();
 
+  const { settings } = useSettings();
   const [promoInput, setPromoInput] = React.useState('');
   const [promoFeedback, setPromoFeedback] = React.useState<{ success: boolean; message: string } | null>(null);
 
@@ -33,16 +34,18 @@ export default function CarrelloPage() {
     if (res.success) setPromoInput('');
   };
 
+  const deliveryFee = subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee;
+
   const waUrl = generateWhatsAppOrderMessage({
     items,
     customerName: 'Cliente dal Carrello',
-    deliveryType: 'pickup',
+    deliveryType: 'delivery',
     requestedDate: 'Da concordare',
-    requestedTimeSlot: 'Da concordare',
+    requestedTimeSlot: 'Consegna a Domicilio Roma',
     subtotal,
-    deliveryFee: 0,
-    total,
-    settings: INITIAL_STORE_SETTINGS,
+    deliveryFee,
+    total: total + deliveryFee,
+    settings,
   });
 
   return (

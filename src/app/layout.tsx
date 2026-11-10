@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+import { SettingsProvider } from '@/context/SettingsContext';
 import { CartProvider } from '@/context/CartContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'SFORNAMÌ | Il buono fatto a mano, con un pizzico di felicità.',
     description:
-      'Laboratorio artigianale di panetteria e pasticceria nel cuore di Roma. Ordini online con ritiro rapido o consegna a domicilio.',
+      'Laboratorio artigianale di panetteria e pasticceria a Roma. Ordini online freschi di giornata con consegna a domicilio su tutta Roma.',
     url: 'https://sfornami.it',
     siteName: 'SFORNAMÌ',
     locale: 'it_IT',
@@ -84,8 +85,8 @@ export default function RootLayout({
     },
     geo: {
       '@type': 'GeoCoordinates',
-      latitude: '41.8967',
-      longitude: '12.4678',
+      latitude: '41.9425',
+      longitude: '12.5855',
     },
     openingHoursSpecification: [
       {
@@ -114,14 +115,16 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col font-sans bg-[#FFF8EF] text-[#57382E]">
-        <CartProvider>
-          <Navbar />
-          <div className="flex-1">{children}</div>
-          <Footer />
-          <CartDrawer />
-          <WhatsAppFloatingButton />
-          <CookieBanner />
-        </CartProvider>
+        <SettingsProvider>
+          <CartProvider>
+            <Navbar />
+            <div className="flex-1">{children}</div>
+            <Footer />
+            <CartDrawer />
+            <WhatsAppFloatingButton />
+            <CookieBanner />
+          </CartProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

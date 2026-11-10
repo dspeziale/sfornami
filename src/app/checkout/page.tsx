@@ -1,32 +1,32 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
-  MapPin,
-  Clock,
   Truck,
-  Store,
+  Clock,
+  ShieldCheck,
   CreditCard,
   Banknote,
   CheckCircle2,
-  ArrowRight,
-  ShieldCheck,
-  MessageCircle,
   AlertCircle,
+  ArrowLeft,
+  MessageCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 import { DataService } from '@/lib/store';
-import { DeliveryType, PaymentMethod, TimeSlot, StoreSettings } from '@/lib/types';
-import { INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS } from '@/lib/initialData';
+import { PaymentMethod, TimeSlot } from '@/lib/types';
+import { INITIAL_TIME_SLOTS } from '@/lib/initialData';
 import { generateWhatsAppOrderMessage } from '@/lib/whatsapp';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, discount, clearCart } = useCart();
+  const { settings } = useSettings();
 
-  const [settings, setSettings] = useState<StoreSettings>(INITIAL_STORE_SETTINGS);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(INITIAL_TIME_SLOTS);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -36,44 +36,35 @@ export default function CheckoutPage() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
 
-  const [deliveryType, setDeliveryType] = useState<DeliveryType>('pickup');
+  // Laboratorio: Consegna a domicilio esclusiva
+  const deliveryType = 'delivery';
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryCity, setDeliveryCity] = useState('Roma');
   const [deliveryCap, setDeliveryCap] = useState('00186');
 
   const [tomorrow, setTomorrow] = useState('');
   const [requestedDate, setRequestedDate] = useState('');
-  const [requestedTimeSlot, setRequestedTimeSlot] = useState(
-    INITIAL_TIME_SLOTS.filter(s => s.type === 'pickup')[0]?.label || '09:00 - 10:30'
-  );
+  const [requestedTimeSlot, setRequestedTimeSlot] = useState('10:30 - 12:30 (Mattina)');
 
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pickup');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
 
   useEffect(() => {
     const tmr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
     setTomorrow(tmr);
     setRequestedDate(tmr);
-    DataService.getSettings().then(s => setSettings(s));
-    DataService.getTimeSlots().then(slots => setTimeSlots(slots));
+
+    DataService.getTimeSlots().then(slots => {
+      setTimeSlots(slots);
+      const deliverySlots = slots.filter(s => s.type === 'delivery' && s.isActive);
+      if (deliverySlots.length > 0) {
+        setRequestedTimeSlot(deliverySlots[0].label);
+      }
+    });
   }, []);
 
-  // Update available slot when delivery type switches
-  useEffect(() => {
-    const validSlots = timeSlots.filter(s => s.type === deliveryType && s.isActive);
-    if (validSlots.length > 0) {
-      setRequestedTimeSlot(validSlots[0].label);
-    }
-  }, [deliveryType, timeSlots]);
-
   // Delivery fee calculation
-  const deliveryFee =
-    deliveryType === 'delivery'
-      ? subtotal >= settings.freeDeliveryThreshold
-        ? 0
-        : settings.deliveryFee
-      : 0;
-
+  const deliveryFee = subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee;
   const total = Math.max(0, subtotal - discount + deliveryFee);
 
   // Validate CAP
@@ -94,19 +85,14 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (deliveryType === 'delivery') {
-      if (!deliveryAddress) {
-        setErrorMsg('Inserisci l’indirizzo completo per la consegna a domicilio a Roma.');
-        return;
-      }
-      if (subtotal < settings.minOrderDelivery) {
-        setErrorMsg(`L'ordine minimo per la consegna a domicilio è di €${settings.minOrderDelivery.toFixed(2)}.`);
-        return;
-      }
-      if (!isCapServito) {
-        setErrorMsg(`Il CAP ${deliveryCap} non è al momento coperto dal nostro servizio express. Contattaci su WhatsApp per accordi speciali.`);
-        return;
-      }
+    if (!deliveryAddress) {
+      setErrorMsg('Inserisci l’indirizzo completo per la consegna a domicilio a Roma.');
+      return;
+    }
+
+    if (subtotal < settings.minOrderDelivery) {
+      setErrorMsg(`L'ordine minimo per la consegna a domicilio è di €${settings.minOrderDelivery.toFixed(2)}.`);
+      return;
     }
 
     setLoading(true);
@@ -129,10 +115,10 @@ export default function CheckoutPage() {
         customerName,
         customerEmail,
         customerPhone,
-        deliveryType,
-        deliveryAddress: deliveryType === 'delivery' ? deliveryAddress : undefined,
-        deliveryCity: deliveryType === 'delivery' ? deliveryCity : undefined,
-        deliveryCap: deliveryType === 'delivery' ? deliveryCap : undefined,
+        deliveryType: 'delivery',
+        deliveryAddress,
+        deliveryCity,
+        deliveryCap,
         requestedDate,
         requestedTimeSlot,
         notes,
@@ -165,11 +151,16 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!deliveryAddress) {
+      setErrorMsg('Inserisci l’indirizzo di consegna a Roma prima di ordinare su WhatsApp.');
+      return;
+    }
+
     const waUrl = generateWhatsAppOrderMessage({
       items,
       customerName,
       customerPhone,
-      deliveryType,
+      deliveryType: 'delivery',
       deliveryAddress,
       deliveryCity,
       deliveryCap,
@@ -191,11 +182,11 @@ export default function CheckoutPage() {
         <div className="text-6xl animate-bounce">🥐</div>
         <h2 className="text-2xl font-black text-[#57382E]">Nessun prodotto nel carrello</h2>
         <p className="text-xs text-[#7E5649]">
-          Scegli dal catalogo le tue prelibatezze artigianali prima di procedere al checkout.
+          Per procedere al checkout, seleziona le tue bontà preferite dal catalogo artigianale.
         </p>
         <Link
           href="/menu"
-          className="inline-flex px-6 py-3 rounded-full bg-[#F5A16C] text-white font-bold text-xs"
+          className="inline-block mt-4 px-6 py-3 rounded-full bg-[#F5A16C] text-white font-bold text-xs hover:bg-[#DE7E42]"
         >
           Vai al Catalogo
         </Link>
@@ -207,11 +198,14 @@ export default function CheckoutPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 space-y-10">
       <div>
         <span className="text-xs font-black uppercase tracking-wider text-[#DE7E42]">
-          Passo Finale
+          Consegna a Domicilio a Roma
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-[#57382E]">
           Completa il Tuo Ordine
         </h1>
+        <p className="text-xs text-[#7E5649] mt-1">
+          Laboratorio artigianale di produzione: tutti i prodotti vengono sfornati freschi su ordinazione e consegnati direttamente a casa tua.
+        </p>
       </div>
 
       {errorMsg && (
@@ -276,114 +270,71 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* 2. Modalità di Ricezione */}
+          {/* 2. Indirizzo e Consegna a Domicilio */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/25 shadow-xs space-y-5">
             <h3 className="text-base font-black text-[#57382E] flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-[#FFE29A] text-xs font-black flex items-center justify-center">2</span>
-              <span>Modalità di Ricezione</span>
+              <span>Consegna a Domicilio a Roma</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Pickup Option */}
-              <button
-                type="button"
-                onClick={() => {
-                  setDeliveryType('pickup');
-                  setPaymentMethod('pickup');
-                }}
-                className={`p-5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between space-y-2 ${deliveryType === 'pickup'
-                    ? 'bg-[#FFE29A]/50 border-[#DE7E42] shadow-sm'
-                    : 'bg-[#FFF8EF]/50 border-[#F5A16C]/25 hover:bg-white'
-                  }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#57382E]">
-                    <Store className="w-5 h-5 text-[#DE7E42]" />
-                    <span className="text-sm font-black">RITIRO IN LABORATORIO</span>
-                  </div>
-                  <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                    GRATIS
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#7E5649] leading-relaxed">
-                  Passa a trovarci in <strong>{settings.address}, Roma</strong>. Salta la fila, il tuo pacco ti aspetta pronto e caldo!
+            {/* Informative notice */}
+            <div className="p-4 rounded-2xl bg-[#FFE29A]/30 border border-[#F5A16C]/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#DE7E42] text-white flex items-center justify-center shrink-0">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-[#57382E]">Laboratorio Artigianale con Consegna Diretta</p>
+                <p className="text-[#7E5649]">
+                  Prepariamo il pane e i dolci freschi nel nostro laboratorio e li consegniamo fragranti all'indirizzo indicato.
                 </p>
-              </button>
-
-              {/* Home Delivery Option */}
-              <button
-                type="button"
-                onClick={() => {
-                  setDeliveryType('delivery');
-                  setPaymentMethod('cash_on_delivery');
-                }}
-                className={`p-5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between space-y-2 ${deliveryType === 'delivery'
-                    ? 'bg-[#FFE29A]/50 border-[#DE7E42] shadow-sm'
-                    : 'bg-[#FFF8EF]/50 border-[#F5A16C]/25 hover:bg-white'
-                  }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#57382E]">
-                    <Truck className="w-5 h-5 text-[#DE7E42]" />
-                    <span className="text-sm font-black">CONSEGNA A DOMICILIO</span>
-                  </div>
-                  <span className="text-xs font-black text-[#57382E]">
-                    {subtotal >= settings.freeDeliveryThreshold ? 'GRATIS' : `€${settings.deliveryFee.toFixed(2)}`}
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#7E5649] leading-relaxed">
-                  Consegna rapida a Roma centro e quartieri serviti. Gratuita per ordini sopra €{settings.freeDeliveryThreshold}.
-                </p>
-              </button>
+              </div>
             </div>
 
-            {/* Address input if Delivery */}
-            {deliveryType === 'delivery' && (
-              <div className="p-4 bg-[#FFF8EF] rounded-2xl border border-[#F5A16C]/30 space-y-3 animate-fadeIn">
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                  <div className="sm:col-span-8">
-                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">
-                      Indirizzo di Consegna (Via, Civico, Piano, Scala)*
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={deliveryAddress}
-                      onChange={e => setDeliveryAddress(e.target.value)}
-                      placeholder="Corso Vittorio Emanuele II, 142, int. 4"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-4">
-                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">
-                      CAP Roma (Es. 00186)*
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={deliveryCap}
-                      onChange={e => setDeliveryCap(e.target.value)}
-                      placeholder="00186"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
-                    />
-                  </div>
+            {/* Address input */}
+            <div className="p-4 bg-[#FFF8EF] rounded-2xl border border-[#F5A16C]/30 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-8">
+                  <label className="text-[11px] font-bold text-[#57382E] block mb-1">
+                    Indirizzo di Consegna (Via, Civico, Scala, Piano, Citofono)*
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={deliveryAddress}
+                    onChange={e => setDeliveryAddress(e.target.value)}
+                    placeholder="Corso Vittorio Emanuele II, 142, int. 4"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
+                  />
                 </div>
 
-                {deliveryCap && !isCapServito && (
-                  <p className="text-xs text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-                    ⚠️ Il CAP {deliveryCap} non è nell'elenco standard express ({settings.servedCaps.join(', ')}). Puoi comunque inviarci l'ordine o scriverci su WhatsApp per verificare la consegna speciale.
-                  </p>
-                )}
+                <div className="sm:col-span-4">
+                  <label className="text-[11px] font-bold text-[#57382E] block mb-1">
+                    CAP Roma (Es. 00186)*
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={deliveryCap}
+                    onChange={e => setDeliveryCap(e.target.value)}
+                    placeholder="00186"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
+                  />
+                </div>
               </div>
-            )}
+
+              {deliveryCap && !isCapServito && (
+                <p className="text-xs text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                  ℹ️ Il CAP {deliveryCap} non è nell'elenco standard express ({settings.servedCaps.join(', ')}). Puoi comunque confermare l'ordine: verificheremo la consegna con te via WhatsApp.
+                </p>
+              )}
+            </div>
 
             {/* Date & Time Slot */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#F5A16C]/15">
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-[#57382E] flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#DE7E42]" />
-                  <span>Data Richiesta*</span>
+                  <span>Data Richiesta di Consegna*</span>
                 </label>
                 <input
                   type="date"
@@ -398,7 +349,7 @@ export default function CheckoutPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-[#57382E] flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#DE7E42]" />
-                  <span>Fascia Oraria Desiderata*</span>
+                  <span>Fascia Oraria di Consegna*</span>
                 </label>
                 <select
                   value={requestedTimeSlot}
@@ -406,7 +357,7 @@ export default function CheckoutPage() {
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-bold text-[#57382E]"
                 >
                   {timeSlots
-                    .filter(s => s.type === deliveryType && s.isActive)
+                    .filter(s => s.type === 'delivery' && s.isActive)
                     .map(slot => (
                       <option key={slot.id} value={slot.label}>
                         {slot.label}
@@ -419,13 +370,13 @@ export default function CheckoutPage() {
             {/* Notes */}
             <div>
               <label className="text-[11px] font-bold text-[#57382E] block mb-1">
-                Note per il forno o per il fattorino
+                Note per la preparazione o indicazioni per il corriere
               </label>
               <textarea
                 rows={2}
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                placeholder="Es. Citofono De Angelis scala B, gradita mollica ben cotta per il pane..."
+                placeholder="Es. Citofonare De Angelis int. 4, pane con mollica ben cotta..."
                 className="w-full px-3.5 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs text-[#57382E]"
               />
             </div>
@@ -435,109 +386,101 @@ export default function CheckoutPage() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/25 shadow-xs space-y-4">
             <h3 className="text-base font-black text-[#57382E] flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-[#FFE29A] text-xs font-black flex items-center justify-center">3</span>
-              <span>Metodo di Pagamento</span>
+              <span>Modalità di Pagamento</span>
             </h3>
 
             <div className="space-y-2">
-              {deliveryType === 'pickup' ? (
-                <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FFE29A]/40 border border-[#DE7E42] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'pickup'}
-                    onChange={() => setPaymentMethod('pickup')}
-                    className="text-[#DE7E42]"
-                  />
-                  <div className="text-xs">
-                    <p className="font-black text-[#57382E]">Pagamento al ritiro in laboratorio</p>
-                    <p className="text-[#7E5649]">Contanti, Bancomat, Carta di Credito o Satispay alla cassa del forno.</p>
-                  </div>
-                </label>
-              ) : (
-                <>
-                  <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/30 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === 'cash_on_delivery'}
-                      onChange={() => setPaymentMethod('cash_on_delivery')}
-                      className="text-[#DE7E42]"
-                    />
-                    <div className="text-xs">
-                      <p className="font-black text-[#57382E] flex items-center gap-1">
-                        <Banknote className="w-3.5 h-3.5" />
-                        <span>Contanti alla consegna</span>
-                      </p>
-                      <p className="text-[#7E5649]">Paga direttamente al fattorino al momento della ricezione.</p>
-                    </div>
-                  </label>
+              <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/30 cursor-pointer">
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === 'cash_on_delivery'}
+                  onChange={() => setPaymentMethod('cash_on_delivery')}
+                  className="text-[#DE7E42]"
+                />
+                <div className="text-xs">
+                  <p className="font-black text-[#57382E] flex items-center gap-1">
+                    <Banknote className="w-3.5 h-3.5" />
+                    <span>Contanti alla consegna</span>
+                  </p>
+                  <p className="text-[#7E5649]">Paga comodamente al corriere al momento della consegna.</p>
+                </div>
+              </label>
 
-                  <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/30 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === 'card_on_delivery'}
-                      onChange={() => setPaymentMethod('card_on_delivery')}
-                      className="text-[#DE7E42]"
-                    />
-                    <div className="text-xs">
-                      <p className="font-black text-[#57382E] flex items-center gap-1">
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>POS / Carta alla consegna</span>
-                      </p>
-                      <p className="text-[#7E5649]">Il nostro corriere dispone di POS contactless portatile.</p>
-                    </div>
-                  </label>
-                </>
-              )}
+              <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/30 cursor-pointer">
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === 'card_on_delivery'}
+                  onChange={() => setPaymentMethod('card_on_delivery')}
+                  className="text-[#DE7E42]"
+                />
+                <div className="text-xs">
+                  <p className="font-black text-[#57382E] flex items-center gap-1">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>POS / Carta alla consegna</span>
+                  </p>
+                  <p className="text-[#7E5649]">Il nostro corriere è dotato di POS contactless portatile.</p>
+                </div>
+              </label>
 
               {/* Stripe notification badge */}
               <div className="p-3 bg-white rounded-2xl border border-dashed border-[#F5A16C]/40 text-[11px] text-[#7E5649] flex items-center justify-between">
-                <span>💳 Pagamento con Carta Online (Stripe):</span>
-                <span className="font-bold text-[#DE7E42]">Attivabile da Pannello Admin</span>
+                <span>💳 Pagamento online con Carta di Credito (Stripe):</span>
+                <span className="font-bold text-[#DE7E42]">Configurabile dal Laboratorio</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Summary Card & Confirm Buttons */}
-        <div className="lg:col-span-4 sticky top-28 space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/25 shadow-lg space-y-5">
-            <h3 className="text-base font-black text-[#57382E]">Riepilogo Ordine ({items.reduce((acc, i) => acc + i.quantity, 0)} pezzi)</h3>
-
-            <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-              {items.map(item => (
-                <div key={item.id} className="flex justify-between items-center text-xs">
-                  <div className="truncate max-w-[190px]">
-                    <span className="font-bold text-[#57382E]">{item.quantity}x</span> {item.product.name}
-                    {item.selectedVariant && (
-                      <span className="block text-[10px] text-[#9E7D73]">
-                        {item.selectedVariant.name}
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-bold text-[#57382E]">
-                    €{((item.product.price + (item.selectedVariant?.priceModifier || 0)) * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
+        {/* Right Summary Sidebar */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/30 shadow-md space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-[#F5A16C]/20">
+              <h3 className="text-base font-black text-[#57382E]">Riepilogo Ordine</h3>
+              <Link href="/carrello" className="text-xs font-bold text-[#DE7E42] hover:underline flex items-center gap-1">
+                <ArrowLeft className="w-3 h-3" /> Modifica
+              </Link>
             </div>
 
-            <div className="space-y-2 text-xs text-[#7E5649] pt-3 border-t border-[#F5A16C]/20">
-              <div className="flex justify-between">
-                <span>Subtotale</span>
+            {/* Items mini list */}
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-1 divide-y divide-[#F5A16C]/10 text-xs">
+              {items.map(item => {
+                const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+                return (
+                  <div key={item.id} className="pt-2 first:pt-0 flex justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#57382E] truncate">
+                        {item.quantity}x {item.product.name}
+                      </p>
+                      {item.selectedVariant && (
+                        <p className="text-[10px] text-[#DE7E42]">{item.selectedVariant.name}</p>
+                      )}
+                    </div>
+                    <span className="font-semibold text-[#57382E] shrink-0">
+                      €{(uPrice * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Calculations */}
+            <div className="pt-4 border-t border-[#F5A16C]/20 space-y-2 text-xs">
+              <div className="flex justify-between text-[#7E5649]">
+                <span>Subtotale prodotti</span>
                 <span className="font-bold text-[#57382E]">€{subtotal.toFixed(2)}</span>
               </div>
 
               {discount > 0 && (
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Sconto</span>
-                  <span>-€{discount.toFixed(2)}</span>
+                <div className="flex justify-between text-emerald-700">
+                  <span>Sconto promozionale</span>
+                  <span className="font-bold">-€{discount.toFixed(2)}</span>
                 </div>
               )}
 
-              <div className="flex justify-between">
-                <span>Spese di consegna</span>
+              <div className="flex justify-between text-[#7E5649]">
+                <span>Spese di consegna a Roma</span>
                 <span className="font-bold text-[#57382E]">
                   {deliveryFee === 0 ? 'GRATIS' : `€${deliveryFee.toFixed(2)}`}
                 </span>
@@ -575,7 +518,7 @@ export default function CheckoutPage() {
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Ordine registrato istantaneamente nel laboratorio.</span>
               </p>
-              <p>Nessun addebito preventivo. Paghi al momento della ricezione.</p>
+              <p>Nessun addebito preventivo. Paghi al momento della consegna.</p>
             </div>
           </div>
         </div>

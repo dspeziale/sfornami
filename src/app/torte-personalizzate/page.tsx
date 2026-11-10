@@ -16,6 +16,7 @@ import {
   Info,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
+import { useSettings } from '@/context/SettingsContext';
 import { generateWhatsAppCustomCakeMessage } from '@/lib/whatsapp';
 import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 
@@ -55,6 +56,7 @@ const DECORATIONS = [
 ];
 
 export default function TortePersonalizzatePage() {
+  const { settings } = useSettings();
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -90,7 +92,7 @@ export default function TortePersonalizzatePage() {
     }
 
     if (!formData.requestedDate) {
-      setErrorMsg('Seleziona la data desiderata per il ritiro o consegna della torta.');
+      setErrorMsg('Seleziona la data desiderata per la consegna a domicilio della torta.');
       return;
     }
 
@@ -119,7 +121,7 @@ export default function TortePersonalizzatePage() {
     };
     const url = generateWhatsAppCustomCakeMessage({
       cakeRequest: fakeReq,
-      settings: INITIAL_STORE_SETTINGS,
+      settings,
     });
     window.open(url, '_blank');
   };
@@ -171,7 +173,7 @@ export default function TortePersonalizzatePage() {
             <a
               href={generateWhatsAppCustomCakeMessage({
                 cakeRequest: submittedRequest,
-                settings: INITIAL_STORE_SETTINGS,
+                settings,
               })}
               target="_blank"
               rel="noopener noreferrer"
@@ -319,7 +321,7 @@ export default function TortePersonalizzatePage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-[#57382E] flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#DE7E42]" />
-                  <span>Data Richiesta (Ritiro o Consegna)*</span>
+                  <span>Data Richiesta Consegna a Domicilio*</span>
                 </label>
                 <input
                   type="date"
@@ -482,7 +484,7 @@ export default function TortePersonalizzatePage() {
                   <span>Come funziona il preventivo?</span>
                 </p>
                 <p>
-                  Ricevuta la richiesta, il mastro pasticcere valuterà gli ingredienti e ti risponderà su WhatsApp con il prezzo esatto e la conferma dell'orario di ritiro a Roma.
+                  Ricevuta la richiesta, il mastro pasticcere valuterà gli ingredienti e ti risponderà su WhatsApp con il prezzo esatto e la conferma dell'orario di consegna a Roma.
                 </p>
               </div>
             </div>

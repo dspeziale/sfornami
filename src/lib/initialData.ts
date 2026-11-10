@@ -375,9 +375,9 @@ export const INITIAL_TIME_SLOTS: TimeSlot[] = [
 export const INITIAL_STORE_SETTINGS: StoreSettings = {
   storeName: 'SFORNAMÌ',
   payoff: 'Il buono fatto a mano, con un pizzico di felicità.',
-  address: 'Via dei Banchi Vecchi, 48',
+  address: 'Quartiere Torraccia',
   city: 'Roma',
-  cap: '00186',
+  cap: '00156',
   phone: '+39 06 6880 1234',
   whatsappNumber: '393401234567', // numero internazionale senza '+'
   email: 'ordini@sfornami.it',
@@ -387,9 +387,9 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   minOrderDelivery: 15.00,
   deliveryFee: 3.50,
   freeDeliveryThreshold: 40.00,
-  servedCaps: ['00186', '00187', '00153', '00192', '00193', '00195', '00196', '00197', '00198', '00161', '00162', '00152'],
+  servedCaps: ['00156', '00157', '00158', '00159', '00137', '00139', '00141', '00161', '00162', '00186', '00187', '00198'],
   stripeEnabled: false, // pronto per integrazione con credenziali
-  pickupOpeningHours: 'Mar - Sab: 07:30 - 19:30 | Dom: 08:00 - 13:30 | Lunedì: Chiuso',
-  specialNotice: 'Tutti gli impasti sono a lenta lievitazione naturale (da 24 a 48 ore).',
+  pickupOpeningHours: 'Laboratorio di produzione: Consegne a domicilio Mar - Dom',
+  specialNotice: 'Laboratorio artigianale a Roma (Torraccia): impasti a lenta lievitazione naturale e consegna express a domicilio.',
 };
 
