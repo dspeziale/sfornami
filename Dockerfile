@@ -19,6 +19,7 @@ RUN npm run build
 
 # 4. Runner
 FROM base AS runner
+RUN apk add --no-cache curl wget libc6-compat
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -38,3 +39,4 @@ USER nextjs
 EXPOSE 3000
 
 CMD ["node", "server.js"]
+
