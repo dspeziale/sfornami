@@ -1,523 +1,345 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import {
-  Sparkles,
-  ArrowRight,
-  Heart,
-  Star,
-  ShoppingBag,
-  ChevronRight,
-  Truck,
-} from 'lucide-react';
-import { HomePageContent, Product } from '@/lib/types';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Search, Filter, X, ChevronDown, Check, Sparkles } from 'lucide-react';
+import { CATEGORIES, ALLERGENS_LIST } from '@/lib/initialData';
+import { Allergen, Product, ProductCategory } from '@/lib/types';
 import { DataService } from '@/lib/store';
 import { ProductCard } from '@/components/products/ProductCard';
-import { INITIAL_HOMEPAGE_CONTENT, INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 
-export default function HomePage() {
+function HomeCatalogContent() {
+  const searchParams = useSearchParams();
+  const initialCategoryParam = searchParams.get('cat') as ProductCategory | null;
+
   const [products, setProducts] = useState<Product[]>([]);
-  const [homeContent, setHomeContent] = useState<HomePageContent>(INITIAL_HOMEPAGE_CONTENT);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>(
+    initialCategoryParam || 'all'
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAllergensExclude, setSelectedAllergensExclude] = useState<Allergen[]>([]);
+  const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
 
   useEffect(() => {
-    // 1. Instant hydration from cached storage if present
-    const cachedProducts = DataService.getCachedProducts();
-    if (cachedProducts && cachedProducts.length > 0) {
-      setProducts(cachedProducts);
+    // 1. Instant hydration from cached storage (0 ms delay on mobile)
+    const cached = DataService.getCachedProducts();
+    if (cached && cached.length > 0) {
+      setProducts(cached);
       setLoading(false);
     }
 
-    Promise.all([
-      DataService.getProducts(),
-      DataService.getHomepageContent(),
-    ]).then(([items, content]) => {
-      setProducts(items);
-      if (content) setHomeContent(content);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
-
-    const handleUpdate = (e: any) => {
-      if (e.detail) setHomeContent(e.detail);
-    };
-    window.addEventListener('sfornami_homepage_updated', handleUpdate);
-    return () => window.removeEventListener('sfornami_homepage_updated', handleUpdate);
+    // 2. Fetch fresh catalog from Postgres
+    DataService.getProducts()
+      .then(items => {
+        setProducts(items);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, []);
 
-  const bestsellers = products.filter(p => p.isFeatured).slice(0, 4);
-  const weeklySpecials = products.filter(p => p.isWeeklySpecial || p.isSeasonal).slice(0, 3);
+  useEffect(() => {
+    if (initialCategoryParam) {
+      setSelectedCategory(initialCategoryParam);
+    }
+  }, [initialCategoryParam]);
 
-  const hc = homeContent || INITIAL_HOMEPAGE_CONTENT;
+  // Derive dynamic category tabs based exclusively on products actually present in catalog
+  const availableCategories = Array.from(new Set(products.map(p => p.category)));
+  const categoriesTabs = [
+    { id: 'all', name: 'Tutto il Catalogo' },
+    ...availableCategories.map(catKey => {
+      const found = CATEGORIES.find(c => c.id === catKey);
+      return {
+        id: catKey,
+        name: found ? found.name : catKey.replace('-', ' ').toUpperCase(),
+      };
+    }),
+  ];
+
+  // Filter and sort logic
+  const filteredProducts = products
+    .filter(product => {
+      // Category match
+      if (selectedCategory !== 'all' && product.category !== selectedCategory) {
+        return false;
+      }
+
+      // Search query match
+      if (searchQuery.trim().length > 0) {
+        const q = searchQuery.toLowerCase();
+        const matchName = product.name?.toLowerCase().includes(q);
+        const matchDesc = product.description?.toLowerCase().includes(q);
+        const matchIngr = product.ingredients?.toLowerCase().includes(q);
+        const matchSub = product.subCategory?.toLowerCase().includes(q);
+        if (!matchName && !matchDesc && !matchIngr && !matchSub) return false;
+      }
+
+      // Exclusion filter for allergens
+      if (selectedAllergensExclude.length > 0) {
+        const containsExcluded = product.allergens?.some(a => selectedAllergensExclude.includes(a));
+        if (containsExcluded) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      // Default 'featured'
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+      return 0;
+    });
+
+  const toggleAllergenExclude = (key: Allergen) => {
+    setSelectedAllergensExclude(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setSelectedCategory('all');
+    setSearchQuery('');
+    setSelectedAllergensExclude([]);
+    setSortBy('featured');
+  };
 
   return (
-    <div className="space-y-16 md:space-y-24">
-      {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden pt-4 pb-12 md:py-20 bg-linear-to-b from-[#FFF8EF] via-[#FEEFE6]/60 to-[#FFF8EF]">
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#FFE29A]/30 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#F28BA6]/20 rounded-full blur-2xl pointer-events-none -z-10" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Copy */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black tracking-wide shadow-xs">
-                <Sparkles className="w-4 h-4 text-[#DE7E42]" />
-                <span>{hc.heroBadge}</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#57382E] tracking-tight leading-[1.1]">
-                {hc.heroTitle}{' '}
-                <span className="text-[#DE7E42] underline decoration-[#F28BA6] decoration-wavy decoration-2">
-                  {hc.heroTitleHighlight}
-                </span>
-              </h1>
-
-              <p className="text-base sm:text-lg text-[#7E5649] max-w-xl mx-auto lg:mx-0 font-medium leading-relaxed">
-                {hc.heroSubtitle}
-              </p>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                <Link
-                  href={hc.heroPrimaryBtnLink || '/menu'}
-                  className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#F5A16C] hover:bg-[#DE7E42] text-white font-black text-sm tracking-wide shadow-xl shadow-[#F5A16C]/35 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>{hc.heroPrimaryBtnText}</span>
-                </Link>
-
-                <Link
-                  href={hc.heroSecondaryBtnLink || '/panetteria'}
-                  className="w-full sm:w-auto px-8 py-4 rounded-full bg-white hover:bg-[#FFE29A]/50 text-[#57382E] font-black text-sm border-2 border-[#F5A16C]/40 shadow-sm transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span>{hc.heroSecondaryBtnText}</span>
-                  <ArrowRight className="w-4 h-4 text-[#DE7E42]" />
-                </Link>
-              </div>
-
-              {/* Fast trust highlights */}
-              <div className="pt-6 border-t border-[#F5A16C]/25 grid grid-cols-3 gap-2 text-center lg:text-left">
-                <div>
-                  <p className="text-lg md:text-xl font-black text-[#57382E]">{hc.trustItem1Value}</p>
-                  <p className="text-[11px] text-[#7E5649] font-semibold">{hc.trustItem1Label}</p>
-                </div>
-                <div>
-                  <p className="text-lg md:text-xl font-black text-[#57382E]">{hc.trustItem2Value}</p>
-                  <p className="text-[11px] text-[#7E5649] font-semibold">{hc.trustItem2Label}</p>
-                </div>
-                <div>
-                  <p className="text-lg md:text-xl font-black text-[#57382E]">{hc.trustItem3Value}</p>
-                  <p className="text-[11px] text-[#7E5649] font-semibold">{hc.trustItem3Label}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Hero Image Card Composition */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative mx-auto max-w-md lg:max-w-none">
-                <div className="relative aspect-4/3 sm:aspect-square rounded-[36px] overflow-hidden shadow-2xl border-4 border-white">
-                  <img
-                    src={hc.heroImageUrl}
-                    alt={hc.heroImageTitle}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
-                  <div className="absolute bottom-5 left-5 right-5 text-white">
-                    <span className="px-3 py-1 rounded-full bg-[#F28BA6] text-white text-[10px] font-black uppercase tracking-wider">
-                      {hc.heroImageTag}
-                    </span>
-                    <h3 className="text-lg font-black mt-1">{hc.heroImageTitle}</h3>
-                  </div>
-                </div>
-
-                {/* Floating badge top right */}
-                <div className="absolute -top-4 -right-4 bg-white p-3.5 rounded-3xl shadow-xl border border-[#FFE29A] flex items-center gap-3">
-                  <span className="text-3xl">🥐</span>
-                  <div>
-                    <p className="text-xs font-black text-[#57382E]">{hc.heroFloatBadge1Text}</p>
-                    <p className="text-[10px] font-bold text-[#DE7E42]">{hc.heroFloatBadge1Sub}</p>
-                  </div>
-                </div>
-
-                {/* Floating badge bottom left */}
-                <div className="absolute -bottom-5 -left-4 bg-white p-3.5 rounded-3xl shadow-xl border border-[#A8D8BD] flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#A8D8BD]/30 flex items-center justify-center text-emerald-700">
-                    <Truck className="w-5 h-5 text-emerald-700" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black text-[#57382E]">{hc.heroFloatBadge2Text}</p>
-                    <p className="text-[10px] text-[#7E5649]">{hc.heroFloatBadge2Sub}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. CATEGORIE GRAFICHE PRINCIPALI */}
-      {(() => {
-        // Only display populated categories (must have at least a title or image)
-        const activeCategories = (hc.categoriesCards || []).filter(
-          cat => cat && ((cat.title && cat.title.trim().length > 0) || (cat.imageUrl && cat.imageUrl.trim().length > 0))
-        );
-
-        if (activeCategories.length === 0) return null;
-
-        const gridColsClass =
-          activeCategories.length === 1
-            ? 'max-w-md mx-auto grid-cols-1'
-            : activeCategories.length === 2
-            ? 'max-w-4xl mx-auto grid-cols-1 sm:grid-cols-2'
-            : activeCategories.length === 3
-            ? 'max-w-6xl mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
-
-        return (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-              {hc.categoriesBadge && (
-                <span className="px-3.5 py-1 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black tracking-wider uppercase">
-                  {hc.categoriesBadge}
-                </span>
-              )}
-              {hc.categoriesTitle && (
-                <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-                  {hc.categoriesTitle}
-                </h2>
-              )}
-              {hc.categoriesSubtitle && (
-                <p className="text-sm text-[#7E5649]">
-                  {hc.categoriesSubtitle}
-                </p>
-              )}
-            </div>
-
-            <div className={`grid gap-6 ${gridColsClass}`}>
-              {activeCategories.map((cat, idx) => (
-                <Link
-                  key={idx}
-                  href={cat.link || '/menu'}
-                  className="group relative rounded-3xl overflow-hidden aspect-4/5 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-[#F5A16C]/20"
-                >
-                  {cat.imageUrl ? (
-                    <img
-                      src={cat.imageUrl}
-                      alt={cat.title || 'Categoria'}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-[#FFE29A]/30 flex items-center justify-center text-4xl">
-                      🥐
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-linear-to-t from-[#57382E]/90 via-[#57382E]/30 to-transparent" />
-                  <div className="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                    {cat.tag && (
-                      <span className="text-xs font-bold text-[#FFE29A] uppercase tracking-wider">
-                        {cat.tag}
-                      </span>
-                    )}
-                    <h3 className="text-2xl font-black">{cat.title}</h3>
-                    {cat.subtitle && <p className="text-xs text-white/90">{cat.subtitle}</p>}
-                    <div className="pt-2 flex items-center text-xs font-bold text-[#FFE29A] gap-1 group-hover:translate-x-1 transition-transform">
-                      <span>Esplora</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
-      })()}
-
-      {/* 3. I PIÙ AMATI DAI NOSTRI CLIENTI (BESTSELLERS) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F28BA6]/20 text-[#D86B86] text-xs font-black uppercase tracking-wider mb-2">
-              <Heart className="w-3.5 h-3.5 fill-[#D86B86]" />
-              <span>{hc.bestsellersBadge}</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-              {hc.bestsellersTitle}
-            </h2>
-            <p className="text-sm text-[#7E5649] mt-1">
-              {hc.bestsellersSubtitle}
-            </p>
-          </div>
-
-          <Link
-            href="/menu"
-            className="inline-flex items-center gap-2 text-sm font-black text-[#DE7E42] hover:text-[#57382E] transition-colors"
-          >
-            <span>Vedi tutto il catalogo ({products.length} prodotti)</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bestsellers.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
-
-      {/* 4. LE BONTÀ DELLA SETTIMANA */}
-      <section className="bg-linear-to-r from-[#FDE8ED] via-[#FFF8EF] to-[#FFE29A]/30 py-16 border-y border-[#F5A16C]/25">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-            <span className="px-3.5 py-1 rounded-full bg-[#F5A16C] text-white text-xs font-black tracking-wider uppercase shadow-xs">
-              {hc.weeklyBadge}
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-6 space-y-3 sm:space-y-5 pb-32 sm:pb-16">
+      {/* Sleek Mobile-First Catalog Header */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-[#57382E] tracking-tight flex items-center gap-2">
+            <span>Il Nostro Forno</span>
+            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-[#FFE29A] text-[#57382E] text-[10px] font-bold uppercase">
+              Torraccia • Roma
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-              {hc.weeklyTitle}
-            </h2>
-            <p className="text-sm text-[#7E5649]">
-              {hc.weeklySubtitle}
-            </p>
-          </div>
+          </h1>
+          <p className="text-[11px] sm:text-xs text-[#7E5649]">
+            Sfornato fresco ogni giorno • Solo consegna a domicilio
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-bold shrink-0">
+          <span className="px-2.5 py-1 rounded-full bg-white text-[#DE7E42] border border-[#F5A16C]/30 shadow-xs flex items-center gap-1">
+            🛵 Consegna Roma
+          </span>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {weeklySpecials.map(product => (
+      {/* Category Tabs: Real categories present in catalog */}
+      {categoriesTabs.length > 1 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0">
+          {categoriesTabs.map(tab => {
+            const isActive = selectedCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedCategory(tab.id as ProductCategory | 'all')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-xs shrink-0 ${
+                  isActive
+                    ? 'bg-[#F5A16C] text-white shadow-sm shadow-[#F5A16C]/30 scale-102'
+                    : 'bg-white text-[#7E5649] hover:bg-[#FFE29A]/40 border border-[#F5A16C]/25'
+                }`}
+              >
+                {tab.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Search & Filter Compact Bar */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#9E7D73]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Cerca pane, pizza, dolci..."
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-[#F5A16C]/30 text-xs text-[#57382E] placeholder:text-[#9E7D73] focus:outline-hidden focus:border-[#F28BA6]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-2 text-[#9E7D73] hover:text-[#57382E]"
+              aria-label="Cancella ricerca"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Quick Sorting Dropdown */}
+        <div className="relative shrink-0">
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as any)}
+            className="appearance-none pl-2.5 pr-6 py-2 rounded-xl bg-white border border-[#F5A16C]/30 text-xs font-bold text-[#57382E] focus:outline-hidden cursor-pointer"
+            aria-label="Ordina prodotti"
+          >
+            <option value="featured">Consigliati</option>
+            <option value="price-asc">Prezzo ↑</option>
+            <option value="price-desc">Prezzo ↓</option>
+            <option value="name">Nome (A-Z)</option>
+          </select>
+          <ChevronDown className="absolute right-1.5 top-2.5 w-3.5 h-3.5 text-[#7E5649] pointer-events-none" />
+        </div>
+
+        {/* Allergen Filter Toggle Button */}
+        <button
+          onClick={() => setShowFiltersModal(prev => !prev)}
+          className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1 border transition-colors shrink-0 ${
+            selectedAllergensExclude.length > 0
+              ? 'bg-[#F28BA6] text-white border-[#F28BA6]'
+              : 'bg-white text-[#57382E] border-[#F5A16C]/30 hover:bg-[#FFE29A]/30'
+          }`}
+          title="Filtra allergeni"
+          aria-label="Filtra allergeni"
+        >
+          <Filter className="w-4 h-4" />
+          <span className="hidden sm:inline">Allergeni</span>
+          {selectedAllergensExclude.length > 0 && (
+            <span className="w-2 h-2 rounded-full bg-[#DE7E42] sm:hidden"></span>
+          )}
+        </button>
+      </div>
+
+      {/* Allergen exclusion quick bar if open */}
+      {showFiltersModal && (
+        <div className="bg-[#FFF8EF] p-4 rounded-2xl sm:rounded-3xl border border-[#F5A16C]/30 space-y-2.5 animate-fadeIn">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-[#57382E]">
+              Mostra solo prodotti SENZA i seguenti allergeni:
+            </p>
+            {selectedAllergensExclude.length > 0 && (
+              <button
+                onClick={() => setSelectedAllergensExclude([])}
+                className="text-[11px] text-[#DE7E42] hover:underline font-bold"
+              >
+                Reset filtri allergeni
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {ALLERGENS_LIST.map(a => {
+              const isExcluded = selectedAllergensExclude.includes(a.key);
+              return (
+                <button
+                  key={a.key}
+                  onClick={() => toggleAllergenExclude(a.key)}
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
+                    isExcluded
+                      ? 'bg-[#F28BA6] text-white shadow-xs'
+                      : 'bg-white text-[#7E5649] border border-[#F5A16C]/30 hover:bg-[#FFE29A]/30'
+                  }`}
+                >
+                  <span>{a.icon}</span>
+                  <span>Senza {a.name}</span>
+                  {isExcluded && <Check className="w-3 h-3 ml-1" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Active filters pill list */}
+      {(selectedCategory !== 'all' || searchQuery || selectedAllergensExclude.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-[#9E7D73] font-medium text-[11px]">Filtri:</span>
+
+          {selectedCategory !== 'all' && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFE29A] text-[#57382E] font-bold text-xs">
+              {categoriesTabs.find(c => c.id === selectedCategory)?.name}
+              <button onClick={() => setSelectedCategory('all')} className="hover:text-red-600">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {searchQuery && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFE29A] text-[#57382E] font-bold text-xs">
+              "{searchQuery}"
+              <button onClick={() => setSearchQuery('')} className="hover:text-red-600">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {selectedAllergensExclude.map(key => (
+            <span
+              key={key}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FDE8ED] text-[#D86B86] font-bold border border-[#F28BA6]/40 text-xs"
+            >
+              No {ALLERGENS_LIST.find(a => a.key === key)?.name}
+              <button onClick={() => toggleAllergenExclude(key)} className="hover:text-red-600">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+
+          <button
+            onClick={clearAllFilters}
+            className="text-xs text-[#DE7E42] hover:underline font-bold ml-1"
+          >
+            Azzera filtri
+          </button>
+        </div>
+      )}
+
+      {/* Products Grid */}
+      {loading ? (
+        <div className="py-20 text-center space-y-3">
+          <div className="text-4xl animate-spin">🌾</div>
+          <p className="text-xs font-bold text-[#57382E]">Caricamento catalogo...</p>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-3xl border-2 border-dashed border-[#F5A16C]/30 p-6 space-y-3">
+          <div className="text-5xl">🥐🔍</div>
+          <h3 className="text-lg font-black text-[#57382E]">Nessuna bontà trovata</h3>
+          <p className="text-xs text-[#7E5649] max-w-sm mx-auto">
+            Nessun prodotto corrisponde ai criteri di ricerca o ai filtri selezionati.
+          </p>
+          <button
+            onClick={clearAllFilters}
+            className="px-5 py-2 rounded-full bg-[#F5A16C] text-white text-xs font-bold hover:bg-[#DE7E42] shadow-md transition-all"
+          >
+            Mostra tutti i prodotti
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="text-xs font-bold text-[#7E5649] px-1">
+            Visualizzando <span className="text-[#57382E] font-black">{filteredProducts.length}</span> bontà artigianali
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {filteredProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </div>
-      </section>
-
-      {/* 5. LA STORIA DI SFORNAMÌ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-[40px] p-8 sm:p-12 md:p-16 border-2 border-[#F5A16C]/25 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black uppercase tracking-wider">
-              <span>{hc.storyBadge}</span>
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#57382E] leading-tight">
-              {hc.storyTitle}
-            </h2>
-
-            <div className="space-y-4 text-sm sm:text-base text-[#7E5649] leading-relaxed">
-              <p>{hc.storyParagraph1}</p>
-              <p>{hc.storyParagraph2}</p>
-              <p>{hc.storyParagraph3}</p>
-            </div>
-
-            <div className="pt-2 flex flex-wrap gap-4">
-              <Link
-                href={hc.storyBtn1Link || '/chi-siamo'}
-                className="px-6 py-3 rounded-full bg-[#57382E] hover:bg-[#7E5649] text-white font-bold text-sm transition-all shadow-md"
-              >
-                {hc.storyBtn1Text}
-              </Link>
-              <Link
-                href={hc.storyBtn2Link || '/torte-personalizzate'}
-                className="px-6 py-3 rounded-full bg-[#F28BA6] hover:bg-[#D86B86] text-white font-bold text-sm transition-all shadow-md"
-              >
-                {hc.storyBtn2Text}
-              </Link>
-            </div>
-          </div>
-
-          <div className="lg:col-span-6 grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <img
-                src={hc.storyImages?.[0] || 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80'}
-                alt="Impasti artigianali"
-                className="w-full h-48 sm:h-56 object-cover rounded-3xl shadow-md"
-              />
-              <img
-                src={hc.storyImages?.[1] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80'}
-                alt="Pane sfornato"
-                className="w-full h-64 sm:h-72 object-cover rounded-3xl shadow-md"
-              />
-            </div>
-            <div className="space-y-4 pt-8">
-              <img
-                src={hc.storyImages?.[2] || 'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=600&q=80'}
-                alt="Preparazione crostata"
-                className="w-full h-64 sm:h-72 object-cover rounded-3xl shadow-md"
-              />
-              <img
-                src={hc.storyImages?.[3] || 'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=600&q=80'}
-                alt="Torta decorata a mano"
-                className="w-full h-48 sm:h-56 object-cover rounded-3xl shadow-md"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. LA QUALITÀ DEGLI INGREDIENTI */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-          <span className="px-3.5 py-1 rounded-full bg-[#A8D8BD]/40 text-[#57382E] text-xs font-black tracking-wider uppercase">
-            {hc.ingredientsBadge}
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-            {hc.ingredientsTitle}
-          </h2>
-          <p className="text-sm text-[#7E5649]">
-            {hc.ingredientsSubtitle}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(hc.ingredients || []).map((ing, idx) => (
-            <div key={idx} className="bg-white p-7 rounded-3xl border border-[#F5A16C]/25 shadow-xs hover:shadow-lg transition-all space-y-3 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#FFE29A] mx-auto flex items-center justify-center text-3xl">
-                {ing.icon}
-              </div>
-              <h4 className="text-lg font-black text-[#57382E]">{ing.title}</h4>
-              <p className="text-xs text-[#7E5649] leading-relaxed">
-                {ing.text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 7. COME FUNZIONA ORDINARE */}
-      <section className="bg-[#FFE29A]/30 py-16 border-y border-[#F5A16C]/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-            <span className="px-3.5 py-1 rounded-full bg-[#DE7E42] text-white text-xs font-black tracking-wider uppercase">
-              {hc.howItWorksBadge}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-              {hc.howItWorksTitle}
-            </h2>
-            <p className="text-sm text-[#7E5649]">
-              {hc.howItWorksSubtitle}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {(hc.howItWorksSteps || []).map((step, idx) => (
-              <div key={idx} className="bg-white rounded-3xl p-8 border border-[#F5A16C]/30 shadow-sm relative text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-[#F5A16C] text-white font-black text-lg flex items-center justify-center mx-auto shadow-md">
-                  {step.step || idx + 1}
-                </div>
-                <h4 className="text-lg font-black text-[#57382E]">{step.title}</h4>
-                <p className="text-xs text-[#7E5649] leading-relaxed">
-                  {step.text}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              href="/menu"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#F5A16C] hover:bg-[#DE7E42] text-white font-black text-base shadow-xl transition-all hover:scale-105"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              <span>INIZIA IL TUO ORDINE ADESSO</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. RECENSIONI DEI CLIENTI */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <span className="px-3.5 py-1 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black tracking-wider uppercase">
-            {hc.reviewsBadge}
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-            {hc.reviewsTitle}
-          </h2>
-          <p className="text-sm text-[#7E5649]">
-            {hc.reviewsSubtitle}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {(hc.reviews || []).map((rev, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-3xl p-7 border-2 border-[#F5A16C]/20 shadow-sm flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center gap-1 text-[#DE7E42]">
-                  {[...Array(rev.rating || 5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#DE7E42]" />
-                  ))}
-                </div>
-                <p className="text-xs text-[#57382E] leading-relaxed italic">
-                  "{rev.text}"
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#F5A16C]/15 flex items-center justify-between">
-                <div>
-                  <h5 className="text-xs font-black text-[#57382E]">{rev.name}</h5>
-                  <p className="text-[10px] text-[#9E7D73]">{rev.zone}</p>
-                </div>
-                <span className="text-[10px] font-semibold text-[#A8D8BD] px-2 py-0.5 rounded-md bg-[#A8D8BD]/20">
-                  Verificato
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 9. INSTAGRAM FEED INTERATTIVO */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#F28BA6]">
-              {hc.instagramBadge}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#57382E]">
-              {hc.instagramTitle}
-            </h2>
-            <p className="text-xs text-[#7E5649]">
-              {hc.instagramSubtitle}
-            </p>
-          </div>
-
-          <a
-            href={`https://instagram.com/${INITIAL_STORE_SETTINGS.instagramHandle.replace('@', '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#F28BA6] text-[#D86B86] hover:bg-[#F28BA6] hover:text-white font-bold text-xs shadow-xs transition-all"
-          >
-            <span>{INITIAL_STORE_SETTINGS.instagramHandle}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </a>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {(hc.instagramPosts || []).map((post, idx) => (
-            <div
-              key={idx}
-              className="group relative rounded-3xl overflow-hidden aspect-square bg-[#FFE29A]/30 shadow-xs hover:shadow-xl transition-all"
-            >
-              <img
-                src={post.img}
-                alt="Post Instagram SFORNAMÌ"
-                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end text-white text-xs">
-                <p className="line-clamp-2 text-[11px] font-medium leading-snug">
-                  {post.caption}
-                </p>
-                <div className="mt-2 flex items-center gap-1 text-[#FFE29A] font-bold text-[10px]">
-                  <Heart className="w-3.5 h-3.5 fill-[#F28BA6] text-[#F28BA6]" />
-                  <span>{post.likes} Mi piace</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      )}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 text-center space-y-3">
+          <div className="text-4xl animate-spin">🌾</div>
+          <p className="text-xs font-bold text-[#57382E]">Caricamento catalogo...</p>
+        </div>
+      }
+    >
+      <HomeCatalogContent />
+    </Suspense>
   );
 }

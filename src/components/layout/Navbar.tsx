@@ -15,10 +15,8 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Home', href: '/' },
+    { name: 'Catalogo & Ordini', href: '/' },
     { name: 'Il nostro laboratorio', href: '/chi-siamo' },
-    { name: 'Panetteria', href: '/panetteria' },
-    { name: 'Pasticceria', href: '/pasticceria' },
     { name: 'Torte su ordinazione', href: '/torte-personalizzate', highlight: true },
     { name: 'Contatti', href: '/contatti' },
   ];
@@ -37,12 +35,12 @@ export const Navbar: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F28BA6] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DE7E42]"></span>
             </span>
-            <span className="text-[11px] sm:text-xs leading-tight">
-              🥖 Laboratorio artigianale di panetteria e pasticceria a Roma
-              <span className="block sm:inline sm:before:content-['•_'] font-bold text-[#DE7E42]">
+            <div className="text-[11px] sm:text-xs leading-tight">
+              <span>🥖 Laboratorio artigianale di panetteria a Roma</span>
+              <div className="font-bold text-[#DE7E42] sm:inline sm:before:content-['•_']">
                 Solo ordini online con consegna a domicilio
-              </span>
-            </span>
+              </div>
+            </div>
           </div>
           <div className="hidden md:flex items-center gap-4 text-[11px] font-bold">
             <span className="flex items-center gap-1 text-[#DE7E42]">
@@ -121,7 +119,7 @@ export const Navbar: React.FC = () => {
 
             {/* ORDINA ONLINE CTA */}
             <Link
-              href="/menu"
+              href="/"
               className="hidden sm:inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-[#F5A16C] hover:bg-[#DE7E42] text-white font-black text-xs md:text-sm tracking-wide shadow-md shadow-[#F5A16C]/30 transition-all hover:scale-105 active:scale-95"
             >
               ORDINA CON CONSEGNA
@@ -167,7 +165,7 @@ export const Navbar: React.FC = () => {
 
             <div className="pt-3 border-t border-[#F5A16C]/20 flex flex-col gap-2.5">
               <Link
-                href="/menu"
+                href="/"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 rounded-2xl bg-[#F5A16C] text-white text-center font-black text-sm shadow-md"
               >

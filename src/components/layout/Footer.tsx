@@ -111,22 +111,22 @@ export const Footer: React.FC = () => {
             </h5>
             <ul className="space-y-2 text-xs text-[#FFF8EF]/80">
               <li>
-                <Link href="/panetteria" className="hover:text-[#FFE29A] transition-colors">
+                <Link href="/?cat=panetteria" className="hover:text-[#FFE29A] transition-colors">
                   Pane a lievito madre
                 </Link>
               </li>
               <li>
-                <Link href="/panetteria" className="hover:text-[#FFE29A] transition-colors">
+                <Link href="/?cat=panetteria" className="hover:text-[#FFE29A] transition-colors">
                   Pizza e focacce alla pala
                 </Link>
               </li>
               <li>
-                <Link href="/pasticceria" className="hover:text-[#FFE29A] transition-colors">
+                <Link href="/?cat=pasticceria" className="hover:text-[#FFE29A] transition-colors">
                   Maritozzi romani
                 </Link>
               </li>
               <li>
-                <Link href="/pasticceria" className="hover:text-[#FFE29A] transition-colors">
+                <Link href="/?cat=pasticceria" className="hover:text-[#FFE29A] transition-colors">
                   Crostate e biscotti
                 </Link>
               </li>
