@@ -1,5 +1,5 @@
-import { CustomCakeRequest, Order, OrderStatus, Product, StoreSettings, TimeSlot } from './types';
-import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS } from './initialData';
+import { CustomCakeRequest, HomePageContent, Order, OrderStatus, Product, StoreSettings, TimeSlot } from './types';
+import { INITIAL_HOMEPAGE_CONTENT, INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS } from './initialData';
 import { supabase, isSupabaseConfigured } from './supabase';
 
 const STORAGE_KEYS = {
@@ -8,6 +8,8 @@ const STORAGE_KEYS = {
   CAKE_REQUESTS: 'sfornami_cake_requests_v1',
   SETTINGS: 'sfornami_settings_v1',
   TIME_SLOTS: 'sfornami_time_slots_v1',
+  HOMEPAGE: 'sfornami_homepage_v1',
+  LAST_SYNC: 'sfornami_last_sync_v1',
 };
 
 // Helper for local storage access in SSR-safe manner
@@ -31,6 +33,14 @@ function setLocalItem<T>(key: string, value: T): void {
   }
 }
 
+// Check if a products list is identical to the hardcoded initial default
+function isDefaultCatalog(products: Product[]): boolean {
+  if (!products || products.length !== INITIAL_PRODUCTS.length) return false;
+  return products.every(
+    (p, idx) => p.id === INITIAL_PRODUCTS[idx]?.id && p.name === INITIAL_PRODUCTS[idx]?.name
+  );
+}
+
 // Initial demonstration orders to give the admin a rich dashboard immediately
 const INITIAL_DEMO_ORDERS: Order[] = [
   {
@@ -39,8 +49,11 @@ const INITIAL_DEMO_ORDERS: Order[] = [
     customerName: 'Giulia De Angelis',
     customerEmail: 'giulia.deangelis@roma.it',
     customerPhone: '+39 347 1234567',
-    deliveryType: 'pickup',
-    requestedDate: '2026-11-11',
+    deliveryType: 'delivery',
+    deliveryAddress: 'Via Nomentana, 450',
+    deliveryCity: 'Roma',
+    deliveryCap: '00156',
+    requestedDate: '2026-11-13',
     requestedTimeSlot: '09:00 - 10:30',
     notes: 'Gradita mollica ben cotta per il pane!',
     items: [
@@ -48,10 +61,10 @@ const INITIAL_DEMO_ORDERS: Order[] = [
       { id: 'item-2', productId: 'prod-maritozzo-romano-classico', productName: 'Maritozzo Tradizionale con Panna Montata', price: 3.20, quantity: 4, total: 12.80 },
     ],
     subtotal: 21.20,
-    deliveryFee: 0,
+    deliveryFee: 3.50,
     discount: 0,
-    total: 21.20,
-    paymentMethod: 'pickup',
+    total: 24.70,
+    paymentMethod: 'cash_on_delivery',
     paymentStatus: 'pending',
     status: 'in_preparazione',
     createdAt: '2026-11-10T18:30:00Z',
@@ -63,10 +76,10 @@ const INITIAL_DEMO_ORDERS: Order[] = [
     customerEmail: 'm.valenti@studiolegaleroma.it',
     customerPhone: '+39 333 9876543',
     deliveryType: 'delivery',
-    deliveryAddress: 'Corso Vittorio Emanuele II, 142',
+    deliveryAddress: 'Via di Torraccia, 22',
     deliveryCity: 'Roma',
-    deliveryCap: '00186',
-    requestedDate: '2026-11-11',
+    deliveryCap: '00156',
+    requestedDate: '2026-11-13',
     requestedTimeSlot: '10:30 - 12:30 (Mattina)',
     notes: 'Citofonare Studio Valenti int. 4. Colazione per riunione clienti.',
     items: [
@@ -82,28 +95,6 @@ const INITIAL_DEMO_ORDERS: Order[] = [
     paymentStatus: 'pending',
     status: 'nuovo',
     createdAt: '2026-11-10T19:15:00Z',
-  },
-  {
-    id: 'ord-demo-3',
-    orderNumber: 'SFN-2026-1003',
-    customerName: 'Elena Ferri',
-    customerEmail: 'elena.ferri@gmail.com',
-    customerPhone: '+39 328 5544332',
-    deliveryType: 'pickup',
-    requestedDate: '2026-11-11',
-    requestedTimeSlot: '16:30 - 18:00',
-    notes: 'Torta per compleanno di mamma, con candelina 60 se possibile!',
-    items: [
-      { id: 'item-6', productId: 'prod-torta-millefoglie-chantilly', productName: 'Torta Millefoglie con Chantilly e Fragoline di Nemi', price: 36.00, quantity: 1, total: 36.00 },
-    ],
-    subtotal: 36.00,
-    deliveryFee: 0,
-    discount: 0,
-    total: 36.00,
-    paymentMethod: 'pickup',
-    paymentStatus: 'paid',
-    status: 'confermato',
-    createdAt: '2026-11-10T16:00:00Z',
   },
 ];
 
@@ -121,7 +112,7 @@ const INITIAL_DEMO_CAKE_REQUESTS: CustomCakeRequest[] = [
     customText: 'Auguri Beatrice! (18 Anni)',
     requestedDate: '2026-11-15',
     requestedTime: '11:00',
-    notes: 'Festa in terrazza a Trastevere. Abbiamo invitati intolleranti alla frutta a guscio.',
+    notes: 'Festa a Roma. Abbiamo invitati intolleranti alla frutta a guscio.',
     status: 'in_valutazione',
     createdAt: '2026-11-10T14:20:00Z',
   },
@@ -130,6 +121,49 @@ const INITIAL_DEMO_CAKE_REQUESTS: CustomCakeRequest[] = [
 export const DataService = {
   // --- PRODUCTS ---
   async getProducts(): Promise<Product[]> {
+    // 1. If running in browser, try fetching centralized server data
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/products', { cache: 'no-store' });
+        if (res.ok) {
+          const serverProducts = (await res.json()) as Product[];
+          if (Array.isArray(serverProducts)) {
+            const localProducts = getLocalItem<Product[] | null>(STORAGE_KEYS.PRODUCTS, null);
+
+            // Auto-Migration check:
+            // If the client has modified products in localStorage, but the server is still on the default demo catalog,
+            // automatically sync the client's customized products up to the server!
+            if (
+              localProducts &&
+              localProducts.length > 0 &&
+              !isDefaultCatalog(localProducts) &&
+              isDefaultCatalog(serverProducts)
+            ) {
+              console.log('🔄 Sincronizzazione automatica catalogo personalizzato verso il server...');
+              try {
+                await fetch('/api/products', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(localProducts),
+                });
+                return localProducts;
+              } catch (syncErr) {
+                console.warn('Auto-sync to server failed', syncErr);
+                return localProducts;
+              }
+            }
+
+            // Otherwise, update local storage with the authoritative server catalog
+            setLocalItem(STORAGE_KEYS.PRODUCTS, serverProducts);
+            return serverProducts;
+          }
+        }
+      } catch (err) {
+        console.warn('Network error fetching /api/products, using local fallback:', err);
+      }
+    }
+
+    // 2. Supabase fallback if configured
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
@@ -138,6 +172,8 @@ export const DataService = {
         console.warn('Supabase fetch failed, falling back to local storage', e);
       }
     }
+
+    // 3. Fallback to localStorage or default
     return getLocalItem<Product[]>(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
   },
 
@@ -147,13 +183,7 @@ export const DataService = {
   },
 
   async saveProduct(product: Product): Promise<Product> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('products').upsert(product);
-      } catch (e) {
-        console.warn('Supabase save product error', e);
-      }
-    }
+    // Update local cache first
     const products = await this.getProducts();
     const index = products.findIndex(p => p.id === product.id);
     if (index >= 0) {
@@ -162,10 +192,67 @@ export const DataService = {
       products.unshift(product);
     }
     setLocalItem(STORAGE_KEYS.PRODUCTS, products);
+
+    // Save to centralized server API
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(product),
+        });
+      } catch (e) {
+        console.warn('Server API save product error:', e);
+      }
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('products').upsert(product);
+      } catch (e) {
+        console.warn('Supabase save product error', e);
+      }
+    }
+
     return product;
   },
 
+  async saveAllProducts(products: Product[]): Promise<Product[]> {
+    setLocalItem(STORAGE_KEYS.PRODUCTS, products);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(products),
+        });
+        if (res.ok) {
+          setLocalItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString());
+        }
+      } catch (e) {
+        console.warn('Server API sync products error:', e);
+      }
+    }
+
+    return products;
+  },
+
   async deleteProduct(productId: string): Promise<void> {
+    const products = await this.getProducts();
+    const updated = products.filter(p => p.id !== productId);
+    setLocalItem(STORAGE_KEYS.PRODUCTS, updated);
+
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch(`/api/products?id=${encodeURIComponent(productId)}`, {
+          method: 'DELETE',
+        });
+      } catch (e) {
+        console.warn('Server API delete product error:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('products').delete().eq('id', productId);
@@ -173,9 +260,6 @@ export const DataService = {
         console.warn('Supabase delete product error', e);
       }
     }
-    const products = await this.getProducts();
-    const updated = products.filter(p => p.id !== productId);
-    setLocalItem(STORAGE_KEYS.PRODUCTS, updated);
   },
 
   async toggleProductAvailability(productId: string): Promise<boolean> {
@@ -189,6 +273,21 @@ export const DataService = {
 
   // --- ORDERS ---
   async getOrders(): Promise<Order[]> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/orders', { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as Order[];
+          if (Array.isArray(data) && data.length > 0) {
+            setLocalItem(STORAGE_KEYS.ORDERS, data);
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/orders:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
@@ -216,6 +315,18 @@ export const DataService = {
       createdAt: new Date().toISOString(),
     };
 
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newOrder),
+        });
+      } catch (e) {
+        console.warn('Failed to save order to /api/orders:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('orders').insert(newOrder);
@@ -231,6 +342,18 @@ export const DataService = {
   },
 
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/orders', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: orderId, status }),
+        });
+      } catch (e) {
+        console.warn('Failed to update order status via /api/orders:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('orders').update({ status }).eq('id', orderId);
@@ -248,6 +371,21 @@ export const DataService = {
 
   // --- CUSTOM CAKE REQUESTS ---
   async getCustomCakeRequests(): Promise<CustomCakeRequest[]> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/torte', { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as CustomCakeRequest[];
+          if (Array.isArray(data) && data.length > 0) {
+            setLocalItem(STORAGE_KEYS.CAKE_REQUESTS, data);
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/torte:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('custom_cake_requests').select('*').order('created_at', { ascending: false });
@@ -267,6 +405,18 @@ export const DataService = {
       createdAt: new Date().toISOString(),
     };
 
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/torte', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newRequest),
+        });
+      } catch (e) {
+        console.warn('Failed to save cake request to /api/torte:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('custom_cake_requests').insert(newRequest);
@@ -282,6 +432,18 @@ export const DataService = {
   },
 
   async updateCustomCakeStatus(id: string, status: CustomCakeRequest['status'], quoteAmount?: number): Promise<void> {
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/torte', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status, estimatedQuote: quoteAmount }),
+        });
+      } catch (e) {
+        console.warn('Failed to update cake status via /api/torte:', e);
+      }
+    }
+
     const requests = await this.getCustomCakeRequests();
     const req = requests.find(r => r.id === id);
     if (req) {
@@ -293,6 +455,21 @@ export const DataService = {
 
   // --- SETTINGS ---
   async getSettings(): Promise<StoreSettings> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/settings', { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as StoreSettings;
+          if (data && data.storeName) {
+            setLocalItem(STORAGE_KEYS.SETTINGS, data);
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/settings:', e);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('store_settings').select('*').single();
@@ -305,6 +482,21 @@ export const DataService = {
   },
 
   async saveSettings(settings: StoreSettings): Promise<StoreSettings> {
+    setLocalItem(STORAGE_KEYS.SETTINGS, settings);
+
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        });
+      } catch (e) {
+        console.warn('Failed to save settings to /api/settings:', e);
+      }
+      window.dispatchEvent(new CustomEvent('sfornami_settings_updated', { detail: settings }));
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('store_settings').upsert(settings);
@@ -312,21 +504,79 @@ export const DataService = {
         console.warn('Supabase save settings error', e);
       }
     }
-    setLocalItem(STORAGE_KEYS.SETTINGS, settings);
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('sfornami_settings_updated', { detail: settings }));
-    }
     return settings;
   },
 
   // --- TIME SLOTS ---
   async getTimeSlots(): Promise<TimeSlot[]> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/calendario', { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as TimeSlot[];
+          if (Array.isArray(data) && data.length > 0) {
+            setLocalItem(STORAGE_KEYS.TIME_SLOTS, data);
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/calendario:', e);
+      }
+    }
     return getLocalItem<TimeSlot[]>(STORAGE_KEYS.TIME_SLOTS, INITIAL_TIME_SLOTS);
   },
 
   async saveTimeSlots(slots: TimeSlot[]): Promise<TimeSlot[]> {
     setLocalItem(STORAGE_KEYS.TIME_SLOTS, slots);
+
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/calendario', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(slots),
+        });
+      } catch (e) {
+        console.warn('Failed to save time slots to /api/calendario:', e);
+      }
+    }
     return slots;
   },
-};
 
+  // --- HOMEPAGE CONTENT ---
+  async getHomepageContent(): Promise<HomePageContent> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/homepage', { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as HomePageContent;
+          if (data && data.heroTitle) {
+            setLocalItem(STORAGE_KEYS.HOMEPAGE, data);
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/homepage:', e);
+      }
+    }
+    return getLocalItem<HomePageContent>(STORAGE_KEYS.HOMEPAGE, INITIAL_HOMEPAGE_CONTENT);
+  },
+
+  async saveHomepageContent(content: HomePageContent): Promise<HomePageContent> {
+    setLocalItem(STORAGE_KEYS.HOMEPAGE, content);
+
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/homepage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(content),
+        });
+      } catch (e) {
+        console.warn('Failed to save homepage content to /api/homepage:', e);
+      }
+      window.dispatchEvent(new CustomEvent('sfornami_homepage_updated', { detail: content }));
+    }
+    return content;
+  },
+};

@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Bell,
+  Sparkles,
 } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 
@@ -52,6 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Gestione Ordini', href: '/admin/ordini', icon: ShoppingBag },
     { name: 'Prodotti & Menu', href: '/admin/prodotti', icon: Package },
     { name: 'Torte su Misura', href: '/admin/torte', icon: Cake },
+    { name: 'Modifica Homepage', href: '/admin/homepage', icon: Sparkles },
     { name: 'Fasce Orarie', href: '/admin/calendario', icon: Calendar },
     { name: 'Impostazioni', href: '/admin/impostazioni', icon: Settings },
   ];

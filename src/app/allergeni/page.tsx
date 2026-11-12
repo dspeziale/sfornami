@@ -1,9 +1,20 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Info, ArrowLeft } from 'lucide-react';
 import { ALLERGENS_LIST, INITIAL_PRODUCTS } from '@/lib/initialData';
+import { Product } from '@/lib/types';
+import { DataService } from '@/lib/store';
 
 export default function AllergeniPage() {
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    DataService.getProducts().then(items => {
+      if (items && items.length > 0) setProducts(items);
+    });
+  }, []);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-20 space-y-12">
       <div>
@@ -65,7 +76,7 @@ export default function AllergeniPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F5A16C]/15">
-              {INITIAL_PRODUCTS.map(p => {
+              {products.map(p => {
                 const allergens = ALLERGENS_LIST.filter(a => p.allergens.includes(a.key));
                 return (
                   <tr key={p.id} className="hover:bg-[#FFF8EF]/50 transition-colors">

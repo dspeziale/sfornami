@@ -1,4 +1,4 @@
-import { AllergenMeta, CategoryInfo, Product, StoreSettings, TimeSlot } from './types';
+import { AllergenMeta, CategoryInfo, HomePageContent, Product, StoreSettings, TimeSlot } from './types';
 
 export const ALLERGENS_LIST: AllergenMeta[] = [
   { key: 'glutine', name: 'Glutine', icon: '🌾', description: 'Presente nei cereali (grano, segale, orzo, farro)' },
@@ -391,5 +391,196 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   stripeEnabled: false, // pronto per integrazione con credenziali
   pickupOpeningHours: 'Laboratorio di produzione: Consegne a domicilio Mar - Dom',
   specialNotice: 'Laboratorio artigianale a Roma (Torraccia): impasti a lenta lievitazione naturale e consegna express a domicilio.',
+};
+
+export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
+  // 1. HERO
+  heroBadge: 'LABORATORIO ARTIGIANALE • CONSEGNA A DOMICILIO A ROMA',
+  heroTitle: 'LA FELICITÀ HA IL PROFUMO DELLE',
+  heroTitleHighlight: 'COSE BUONE!',
+  heroSubtitle: 'Ogni giorno impastiamo, inforniamo e prepariamo con amore tante bontà fatte a mano. Benvenuti nel mondo SFORNAMÌ!',
+  heroPrimaryBtnText: 'ORDINA ONLINE',
+  heroPrimaryBtnLink: '/menu',
+  heroSecondaryBtnText: 'SCOPRI LE NOSTRE BONTÀ',
+  heroSecondaryBtnLink: '/panetteria',
+  heroImageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=85',
+  heroImageTag: 'Appena Sfornato',
+  heroImageTitle: "L'Autentico Pane Romano Cotto su Pietra",
+  heroFloatBadge1Text: 'Maritozzi Caldi',
+  heroFloatBadge1Sub: 'Con panna montata fresca',
+  heroFloatBadge2Text: 'Consegna Rapida a Roma',
+  heroFloatBadge2Sub: 'Solo Consegna a Domicilio',
+  trustItem1Value: '100%',
+  trustItem1Label: 'Lievito Madre Naturale',
+  trustItem2Value: '48 Ore',
+  trustItem2Label: 'Lenta Lievitazione',
+  trustItem3Value: 'Torraccia (00156)',
+  trustItem3Label: 'Solo Consegna a Domicilio',
+
+  // 2. CATEGORIES
+  categoriesBadge: 'Il Nostro Mondo Artigianale',
+  categoriesTitle: 'Esplora le Categorie',
+  categoriesSubtitle: 'Dalla colazione alla cena: ogni giorno prepariamo impasti freschi, frolle friabili e ricette della tradizione romana.',
+  categoriesCards: [
+    {
+      title: 'IL PANE',
+      subtitle: 'La bontà della tradizione.',
+      tag: '1. Tradizione & Farine',
+      imageUrl: 'https://images.unsplash.com/photo-1589367920969-ab8e050bbb04?auto=format&fit=crop&w=800&q=80',
+      link: '/panetteria',
+    },
+    {
+      title: 'I DOLCI',
+      subtitle: 'Piccoli momenti di felicità.',
+      tag: '2. Pasticceria Fresca',
+      imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80',
+      link: '/pasticceria',
+    },
+    {
+      title: 'LE TORTE',
+      subtitle: 'Speciali come le tue occasioni.',
+      tag: '3. Su Ordinazione',
+      imageUrl: 'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=800&q=80',
+      link: '/torte-personalizzate',
+    },
+    {
+      title: 'LE NOSTRE GOLOSITÀ',
+      subtitle: 'Tutto da scoprire.',
+      tag: '4. Pizza & Specialità',
+      imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80',
+      link: '/menu',
+    },
+  ],
+
+  // 3. BESTSELLERS
+  bestsellersBadge: 'I Preferiti di Sempre',
+  bestsellersTitle: 'I Più Amati dai Nostri Clienti',
+  bestsellersSubtitle: 'I prodotti che ogni giorno vanno a ruba nel nostro laboratorio a Roma.',
+
+  // 4. WEEKLY SPECIALS
+  weeklyBadge: 'Sfornati Questa Settimana',
+  weeklyTitle: 'Le Bontà della Settimana',
+  weeklySubtitle: 'Specialità del momento preparate con ingredienti stagionali a tiratura limitata.',
+
+  // 5. STORY SECTION
+  storyBadge: 'Passione per le cose buone',
+  storyTitle: "DIETRO OGNI BUONA COSA C'È UNA STORIA.",
+  storyParagraph1: 'SFORNAMÌ nasce dal sogno semplice e profondo di riportare sulle tavole di Roma il sapore autentico delle cose fatte a mano, con pazienza, rispetto dei tempi e materie prime d’eccellenza.',
+  storyParagraph2: 'Non usiamo semilavorati, conservanti o acceleratori di lievitazione. Il nostro laboratorio è vivo: la farina nell’aria, il profumo della scorza d’arancia negli impasti mattutini e il lievito madre che rinfreschiamo ogni singolo giorno da generazioni.',
+  storyParagraph3: 'Che si tratti di una pagnotta di Lariano croccante, di una teglia di pizza bianca appena oliata o di un vassoio di maritozzi con panna fresca, il nostro obiettivo è uno solo: regalarvi un pizzico di felicità autentica.',
+  storyBtn1Text: 'Scopri la nostra storia completa',
+  storyBtn1Link: '/chi-siamo',
+  storyBtn2Text: 'Richiedi una torta speciale',
+  storyBtn2Link: '/torte-personalizzate',
+  storyImages: [
+    'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=600&q=80',
+  ],
+
+  // 6. INGREDIENTS
+  ingredientsBadge: 'Senza Scorciatoie',
+  ingredientsTitle: 'La Qualità dei Nostri Ingredienti',
+  ingredientsSubtitle: 'Selezioniamo con cura maniacale fornitori locali, farine italiane e materie prime pure.',
+  ingredients: [
+    {
+      icon: '🌾',
+      title: 'Lievito Madre Centenario',
+      text: 'Il cuore pulsante del nostro forno. Fermentazione naturale che dona digeribilità straordinaria e profumi inconfondibili.',
+    },
+    {
+      icon: '🪵',
+      title: 'Farine Macinate a Pietra',
+      text: 'Grani 100% italiani non raffinati, ricchi di germe di grano vivo, fibre naturali e sapore vero della terra.',
+    },
+    {
+      icon: '🥚',
+      title: 'Uova Biologiche Laziali',
+      text: 'Da galline allevate all’aperto a terra. Tuorli dorati e ricchi che donano alle nostre creme e brioche un colore inimitabile.',
+    },
+    {
+      icon: '🧈',
+      title: 'Burro di Centrifuga',
+      text: 'Puro burro di latteria ad alto punto di fusione. Niente margarina o oli idrogenati, solo fragranza e leggerezza.',
+    },
+  ],
+
+  // 7. HOW IT WORKS
+  howItWorksBadge: 'Semplice, Veloce e Senza File',
+  howItWorksTitle: 'Ordinare da SFORNAMÌ è Semplicissimo',
+  howItWorksSubtitle: "Scegli dal catalogo o chatta con noi: prepariamo tutto caldo per l'orario che preferisci.",
+  howItWorksSteps: [
+    {
+      step: 1,
+      title: 'Scegli le tue bontà',
+      text: 'Naviga tra pane, pizza alla pala, crostate, maritozzi e biscotti freschi sul catalogo interattivo.',
+    },
+    {
+      step: 2,
+      title: 'Ordina dal Sito o WhatsApp',
+      text: 'Conferma in un click sul sito oppure invia direttamente il carrello già compilato su WhatsApp al nostro laboratorio.',
+    },
+    {
+      step: 3,
+      title: 'Consegna Diretta a Casa',
+      text: 'Dal nostro laboratorio artigianale nel quartiere Torraccia (00156 Roma) direttamente a casa tua: ricevi il tuo ordine caldo e fragrante a domicilio.',
+    },
+  ],
+
+  // 8. REVIEWS
+  reviewsBadge: 'Dicono di Noi',
+  reviewsTitle: 'Chi Ha Già Assaggiato SFORNAMÌ',
+  reviewsSubtitle: 'I sorrisi e le parole dei nostri affezionati clienti a Roma.',
+  reviews: [
+    {
+      name: 'Flaminia R.',
+      zone: 'Campo de’ Fiori, Roma',
+      rating: 5,
+      date: 'Ieri',
+      text: 'Il miglior pane casereccio di Roma! Crosta croccante e mollica profumata che dura giorni. E il maritozzo con la panna montata sul momento è commovente!',
+    },
+    {
+      name: 'Lorenzo M.',
+      zone: 'Trastevere, Roma',
+      rating: 5,
+      date: '3 giorni fa',
+      text: 'Abbiamo ordinato la Millefoglie con fragoline per la laurea di mia sorella: un capolavoro assoluto. Ordinata comodamente da WhatsApp e arrivata calda e puntuale a domicilio.',
+    },
+    {
+      name: 'Serena & Matteo',
+      zone: 'Torraccia, Roma',
+      rating: 5,
+      date: 'La settimana scorsa',
+      text: 'La pizza bianca alla pala appena sfornata è una droga! Fragrante, salata al punto giusto, digeribilissima grazie alla lievitazione naturale. Bravi davvero!',
+    },
+  ],
+
+  // 9. INSTAGRAM FEED
+  instagramBadge: 'Seguici nel Backstage',
+  instagramTitle: 'Dal Nostro Profilo Instagram',
+  instagramSubtitle: 'Ogni giorno storie di impasti, sfornate in diretta e nuove creazioni.',
+  instagramPosts: [
+    {
+      img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',
+      caption: 'Ore 06:30 • Maritozzi caldi pronti per la panna fresca! 🥐✨',
+      likes: 342,
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
+      caption: '36 ore di lievito madre vivo. Il profumo del pane vero sfornato caldo a Torraccia. 🥖',
+      likes: 489,
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=600&q=80',
+      caption: 'Frolla burrosa e visciole selvatiche: la tradizione delle nonne romane non mente mai. ❤️',
+      likes: 512,
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=600&q=80',
+      caption: 'Millefoglie caramellata per una festa speciale a Roma. Auguri Camilla! 🎂🍓',
+      likes: 670,
+    },
+  ],
 };
 

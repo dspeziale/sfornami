@@ -17,6 +17,11 @@ import {
   Upload,
   Image as ImageIcon,
   Star,
+  RefreshCw,
+  Download,
+  UploadCloud,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
 import { Allergen, Product, ProductCategory } from '@/lib/types';
@@ -145,11 +150,81 @@ export default function AdminProdottiPage() {
     });
   };
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [hasPendingLocal, setHasPendingLocal] = useState(false);
+
   const loadProducts = async () => {
     setLoading(true);
+    // Check if client localStorage has products
+    if (typeof window !== 'undefined') {
+      try {
+        const localRaw = window.localStorage.getItem('sfornami_products_v1');
+        if (localRaw) {
+          const localParsed = JSON.parse(localRaw);
+          if (Array.isArray(localParsed) && localParsed.length > 0) {
+            setHasPendingLocal(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Error reading local catalog:', err);
+      }
+    }
     const data = await DataService.getProducts();
     setProducts(data);
     setLoading(false);
+  };
+
+  const handleSyncToServer = async () => {
+    setSyncing(true);
+    try {
+      await DataService.saveAllProducts(products);
+      setSyncMessage('✅ Catalogo sincronizzato con successo con il server! Ora è visibile su smartphone, tablet e a tutti i clienti.');
+      setHasPendingLocal(false);
+      setTimeout(() => setSyncMessage(null), 8000);
+    } catch (e) {
+      setSyncMessage('❌ Errore durante la sincronizzazione con il server.');
+      setTimeout(() => setSyncMessage(null), 5000);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleExportJson = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(products, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `sfornami-catalogo-${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async event => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (confirm(`Vuoi importare ${parsed.length} prodotti e sincronizzarli immediatamente sul server per renderli visibili a tutti?`)) {
+            setLoading(true);
+            await DataService.saveAllProducts(parsed);
+            setProducts(parsed);
+            setSyncMessage(`✅ Importati con successo ${parsed.length} prodotti e salvati sul server!`);
+            setTimeout(() => setSyncMessage(null), 8000);
+            setLoading(false);
+          }
+        } else {
+          alert('Il file non contiene un catalogo prodotti valido.');
+        }
+      } catch (err) {
+        alert('Errore nella lettura del file JSON selezionato.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   useEffect(() => {
@@ -290,6 +365,68 @@ export default function AdminProdottiPage() {
           <span>AGGIUNGI PRODOTTO</span>
         </button>
       </div>
+
+      {/* Server Synchronization & Multi-Device Bar */}
+      <div className="bg-[#FFE29A]/30 border-2 border-[#FFE29A] rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#FFE29A] text-[#DE7E42] flex items-center justify-center shrink-0">
+            <UploadCloud className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-[#57382E] uppercase tracking-wider">
+                Database PostgreSQL & Multi-Dispositivo
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                Postgres Active
+              </span>
+            </div>
+            <p className="text-[11px] text-[#7E5649] mt-0.5">
+              I prodotti modificati vengono salvati direttamente nel database PostgreSQL e sincronizzati in tempo reale su smartphone, tablet e a tutti i clienti.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <button
+            type="button"
+            onClick={handleSyncToServer}
+            disabled={syncing}
+            className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-[#57382E] hover:bg-[#7E5649] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
+            title="Invia tutti i prodotti attuali al database PostgreSQL per renderli subito visibili su mobile"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>{syncing ? 'Salvataggio in Postgres...' : 'Salva in PostgreSQL (Mobile)'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportJson}
+            className="px-3 py-2 rounded-xl bg-white hover:bg-[#FFF8EF] border border-[#F5A16C]/40 text-[#57382E] text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all"
+            title="Scarica un file di backup JSON del catalogo attuale"
+          >
+            <Download className="w-3.5 h-3.5 text-[#DE7E42]" />
+            <span>Esporta Backup</span>
+          </button>
+
+          <label
+            className="px-3 py-2 rounded-xl bg-white hover:bg-[#FFF8EF] border border-[#F5A16C]/40 text-[#57382E] text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            title="Importa un file di catalogo JSON salvato in precedenza"
+          >
+            <Upload className="w-3.5 h-3.5 text-[#DE7E42]" />
+            <span>Importa</span>
+            <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
+          </label>
+        </div>
+      </div>
+
+      {syncMessage && (
+        <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-xs animate-fadeIn">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{syncMessage}</span>
+        </div>
+      )}
 
       {/* Filter and Search */}
       <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-[#F5A16C]/25 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">

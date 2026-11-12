@@ -16,6 +16,7 @@ import {
   Truck,
   Store,
   DollarSign,
+  Sparkles,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
 import { CustomCakeRequest, Order, OrderStatus } from '@/lib/types';
@@ -94,6 +95,14 @@ export default function AdminDashboardPage() {
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Aggiorna</span>
           </button>
+
+          <Link
+            href="/admin/homepage"
+            className="px-4 py-2.5 rounded-xl bg-[#57382E] hover:bg-[#7E5649] text-white text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#FFE29A]" />
+            <span>Modifica Homepage</span>
+          </Link>
 
           <Link
             href="/admin/prodotti"

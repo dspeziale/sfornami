@@ -164,3 +164,114 @@ export interface AllergenMeta {
   description: string;
 }
 
+export interface HomePageCategoryCard {
+  title: string;
+  subtitle: string;
+  tag: string;
+  imageUrl: string;
+  link: string;
+}
+
+export interface HomePageIngredient {
+  icon: string;
+  title: string;
+  text: string;
+}
+
+export interface HomePageHowItWorksStep {
+  step: number;
+  title: string;
+  text: string;
+}
+
+export interface HomePageReview {
+  name: string;
+  zone: string;
+  rating: number;
+  date: string;
+  text: string;
+}
+
+export interface HomePageInstagramPost {
+  img: string;
+  caption: string;
+  likes: number;
+}
+
+export interface HomePageContent {
+  // 1. HERO
+  heroBadge: string;
+  heroTitle: string;
+  heroTitleHighlight: string;
+  heroSubtitle: string;
+  heroPrimaryBtnText: string;
+  heroPrimaryBtnLink: string;
+  heroSecondaryBtnText: string;
+  heroSecondaryBtnLink: string;
+  heroImageUrl: string;
+  heroImageTag: string;
+  heroImageTitle: string;
+  heroFloatBadge1Text: string;
+  heroFloatBadge1Sub: string;
+  heroFloatBadge2Text: string;
+  heroFloatBadge2Sub: string;
+  trustItem1Value: string;
+  trustItem1Label: string;
+  trustItem2Value: string;
+  trustItem2Label: string;
+  trustItem3Value: string;
+  trustItem3Label: string;
+
+  // 2. CATEGORIES
+  categoriesBadge: string;
+  categoriesTitle: string;
+  categoriesSubtitle: string;
+  categoriesCards: HomePageCategoryCard[];
+
+  // 3. BESTSELLERS SECTION
+  bestsellersBadge: string;
+  bestsellersTitle: string;
+  bestsellersSubtitle: string;
+
+  // 4. WEEKLY SPECIALS
+  weeklyBadge: string;
+  weeklyTitle: string;
+  weeklySubtitle: string;
+
+  // 5. STORY SECTION
+  storyBadge: string;
+  storyTitle: string;
+  storyParagraph1: string;
+  storyParagraph2: string;
+  storyParagraph3: string;
+  storyBtn1Text: string;
+  storyBtn1Link: string;
+  storyBtn2Text: string;
+  storyBtn2Link: string;
+  storyImages: string[];
+
+  // 6. INGREDIENTS
+  ingredientsBadge: string;
+  ingredientsTitle: string;
+  ingredientsSubtitle: string;
+  ingredients: HomePageIngredient[];
+
+  // 7. HOW IT WORKS
+  howItWorksBadge: string;
+  howItWorksTitle: string;
+  howItWorksSubtitle: string;
+  howItWorksSteps: HomePageHowItWorksStep[];
+
+  // 8. REVIEWS
+  reviewsBadge: string;
+  reviewsTitle: string;
+  reviewsSubtitle: string;
+  reviews: HomePageReview[];
+
+  // 9. INSTAGRAM FEED
+  instagramBadge: string;
+  instagramTitle: string;
+  instagramSubtitle: string;
+  instagramPosts: HomePageInstagramPost[];
+}
+
