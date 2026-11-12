@@ -158,48 +158,82 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. LE 4 CATEGORIE GRAFICHE PRINCIPALI */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <span className="px-3.5 py-1 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black tracking-wider uppercase">
-            {hc.categoriesBadge}
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
-            {hc.categoriesTitle}
-          </h2>
-          <p className="text-sm text-[#7E5649]">
-            {hc.categoriesSubtitle}
-          </p>
-        </div>
+      {/* 2. CATEGORIE GRAFICHE PRINCIPALI */}
+      {(() => {
+        // Only display populated categories (must have at least a title or image)
+        const activeCategories = (hc.categoriesCards || []).filter(
+          cat => cat && ((cat.title && cat.title.trim().length > 0) || (cat.imageUrl && cat.imageUrl.trim().length > 0))
+        );
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(hc.categoriesCards || []).map((cat, idx) => (
-            <Link
-              key={idx}
-              href={cat.link}
-              className="group relative rounded-3xl overflow-hidden aspect-4/5 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-[#F5A16C]/20"
-            >
-              <img
-                src={cat.imageUrl}
-                alt={cat.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-[#57382E]/90 via-[#57382E]/30 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                <span className="text-xs font-bold text-[#FFE29A] uppercase tracking-wider">
-                  {cat.tag}
+        if (activeCategories.length === 0) return null;
+
+        const gridColsClass =
+          activeCategories.length === 1
+            ? 'max-w-md mx-auto grid-cols-1'
+            : activeCategories.length === 2
+            ? 'max-w-4xl mx-auto grid-cols-1 sm:grid-cols-2'
+            : activeCategories.length === 3
+            ? 'max-w-6xl mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
+
+        return (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+              {hc.categoriesBadge && (
+                <span className="px-3.5 py-1 rounded-full bg-[#FFE29A] text-[#57382E] text-xs font-black tracking-wider uppercase">
+                  {hc.categoriesBadge}
                 </span>
-                <h3 className="text-2xl font-black">{cat.title}</h3>
-                <p className="text-xs text-white/90">{cat.subtitle}</p>
-                <div className="pt-2 flex items-center text-xs font-bold text-[#FFE29A] gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>Esplora</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+              )}
+              {hc.categoriesTitle && (
+                <h2 className="text-3xl sm:text-4xl font-black text-[#57382E]">
+                  {hc.categoriesTitle}
+                </h2>
+              )}
+              {hc.categoriesSubtitle && (
+                <p className="text-sm text-[#7E5649]">
+                  {hc.categoriesSubtitle}
+                </p>
+              )}
+            </div>
+
+            <div className={`grid gap-6 ${gridColsClass}`}>
+              {activeCategories.map((cat, idx) => (
+                <Link
+                  key={idx}
+                  href={cat.link || '/menu'}
+                  className="group relative rounded-3xl overflow-hidden aspect-4/5 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-[#F5A16C]/20"
+                >
+                  {cat.imageUrl ? (
+                    <img
+                      src={cat.imageUrl}
+                      alt={cat.title || 'Categoria'}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#FFE29A]/30 flex items-center justify-center text-4xl">
+                      🥐
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-linear-to-t from-[#57382E]/90 via-[#57382E]/30 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6 text-white space-y-1">
+                    {cat.tag && (
+                      <span className="text-xs font-bold text-[#FFE29A] uppercase tracking-wider">
+                        {cat.tag}
+                      </span>
+                    )}
+                    <h3 className="text-2xl font-black">{cat.title}</h3>
+                    {cat.subtitle && <p className="text-xs text-white/90">{cat.subtitle}</p>}
+                    <div className="pt-2 flex items-center text-xs font-bold text-[#FFE29A] gap-1 group-hover:translate-x-1 transition-transform">
+                      <span>Esplora</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* 3. I PIÙ AMATI DAI NOSTRI CLIENTI (BESTSELLERS) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

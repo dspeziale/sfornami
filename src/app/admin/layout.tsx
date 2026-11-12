@@ -16,6 +16,7 @@ import {
   X,
   Bell,
   Sparkles,
+  Users,
 } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 
@@ -51,6 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Gestione Ordini', href: '/admin/ordini', icon: ShoppingBag },
+    { name: 'Clienti Registrati', href: '/admin/clienti', icon: Users },
     { name: 'Prodotti & Menu', href: '/admin/prodotti', icon: Package },
     { name: 'Torte su Misura', href: '/admin/torte', icon: Cake },
     { name: 'Modifica Homepage', href: '/admin/homepage', icon: Sparkles },

@@ -377,9 +377,33 @@ export default function AdminHomepagePage() {
         {/* 2. CATEGORIES TAB */}
         {activeTab === 'categories' && (
           <div className="space-y-6 animate-fadeIn">
-            <div>
-              <h3 className="text-lg font-black text-[#57382E]">Le 4 Categorie Grafiche Principali</h3>
-              <p className="text-xs text-[#7E5649]">Personalizza titoli, etichette e fotografie delle quattro sezioni grafiche.</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black text-[#57382E]">Categorie in Vetrina</h3>
+                <p className="text-xs text-[#7E5649]">
+                  Personalizza le categorie visibili in Homepage. Non sei vincolato a 4: puoi aggiungerne quante ne vuoi o eliminarle. Le card vuote o senza titolo non verranno mostrate.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = [
+                    ...(content.categoriesCards || []),
+                    {
+                      title: '',
+                      subtitle: '',
+                      tag: `Categoria #${(content.categoriesCards || []).length + 1}`,
+                      imageUrl: '',
+                      link: '/menu',
+                    },
+                  ];
+                  setContent({ ...content, categoriesCards: updated });
+                }}
+                className="px-4 py-2 rounded-xl bg-[#F5A16C] hover:bg-[#DE7E42] text-white text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Aggiungi Categoria</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -413,17 +437,33 @@ export default function AdminHomepagePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-              {content.categoriesCards.map((cat, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/25 space-y-2">
+              {(content.categoriesCards || []).map((cat, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-[#FFF8EF] border border-[#F5A16C]/25 space-y-2 relative">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-[#DE7E42]">Categoria #{idx + 1}</span>
-                    <span className="text-[10px] text-[#7E5649] font-bold">{cat.title}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#7E5649] font-bold truncate max-w-[120px]">
+                        {cat.title || '(Vuota - Non mostrata)'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = content.categoriesCards.filter((_, i) => i !== idx);
+                          setContent({ ...content, categoriesCards: updated });
+                        }}
+                        className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Elimina questa categoria"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#57382E]">Titolo:</label>
                     <input
                       type="text"
                       value={cat.title}
+                      placeholder="es. LE TORTE"
                       onChange={e => {
                         const updated = [...content.categoriesCards];
                         updated[idx].title = e.target.value;
@@ -437,6 +477,7 @@ export default function AdminHomepagePage() {
                     <input
                       type="text"
                       value={cat.subtitle}
+                      placeholder="es. Speciali come le tue occasioni."
                       onChange={e => {
                         const updated = [...content.categoriesCards];
                         updated[idx].subtitle = e.target.value;
@@ -450,6 +491,7 @@ export default function AdminHomepagePage() {
                     <input
                       type="text"
                       value={cat.tag}
+                      placeholder="es. 1. Tradizione & Farine"
                       onChange={e => {
                         const updated = [...content.categoriesCards];
                         updated[idx].tag = e.target.value;
@@ -463,6 +505,7 @@ export default function AdminHomepagePage() {
                     <input
                       type="url"
                       value={cat.imageUrl}
+                      placeholder="https://..."
                       onChange={e => {
                         const updated = [...content.categoriesCards];
                         updated[idx].imageUrl = e.target.value;
@@ -476,6 +519,7 @@ export default function AdminHomepagePage() {
                     <input
                       type="text"
                       value={cat.link}
+                      placeholder="/menu o /panetteria"
                       onChange={e => {
                         const updated = [...content.categoriesCards];
                         updated[idx].link = e.target.value;

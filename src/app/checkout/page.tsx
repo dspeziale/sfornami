@@ -21,26 +21,47 @@ import { DataService } from '@/lib/store';
 import { PaymentMethod, TimeSlot } from '@/lib/types';
 import { INITIAL_TIME_SLOTS } from '@/lib/initialData';
 import { generateWhatsAppOrderMessage } from '@/lib/whatsapp';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
+import { UserCheck, LogIn, UserPlus } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, discount, clearCart } = useCart();
   const { settings } = useSettings();
+  const { customer, login, register: registerCustomer, logout } = useCustomerAuth();
 
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(INITIAL_TIME_SLOTS);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Authentication mode: 'login' | 'register' | 'authenticated'
+  const [authMode, setAuthMode] = useState<'register' | 'login'>('register');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
   // Form states
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerName, setCustomerName] = useState(customer?.name || '');
+  const [customerEmail, setCustomerEmail] = useState(customer?.email || '');
+  const [customerPhone, setCustomerPhone] = useState(customer?.phone || '');
 
   // Laboratorio: Consegna a domicilio esclusiva
   const deliveryType = 'delivery';
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [deliveryCity, setDeliveryCity] = useState('Roma');
-  const [deliveryCap, setDeliveryCap] = useState('00186');
+  const [deliveryAddress, setDeliveryAddress] = useState(customer?.address || '');
+  const [deliveryCity, setDeliveryCity] = useState(customer?.city || 'Roma');
+  const [deliveryCap, setDeliveryCap] = useState(customer?.cap || '00156');
+
+  // Sync state if logged in customer changes
+  useEffect(() => {
+    if (customer) {
+      if (customer.name) setCustomerName(customer.name);
+      if (customer.email) setCustomerEmail(customer.email);
+      if (customer.phone) setCustomerPhone(customer.phone);
+      if (customer.address) setDeliveryAddress(customer.address);
+      if (customer.city) setDeliveryCity(customer.city);
+      if (customer.cap) setDeliveryCap(customer.cap);
+    }
+  }, [customer]);
 
   const [tomorrow, setTomorrow] = useState('');
   const [requestedDate, setRequestedDate] = useState('');
@@ -131,6 +152,21 @@ export default function CheckoutPage() {
         paymentStatus: 'pending',
         status: 'nuovo',
       });
+
+      // Auto-register or update customer in Postgres database
+      try {
+        await registerCustomer({
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          address: deliveryAddress,
+          city: deliveryCity,
+          cap: deliveryCap,
+          notes,
+        });
+      } catch (userErr) {
+        console.warn('Customer auto-registration error:', userErr);
+      }
 
       // Clear cart
       clearCart();
@@ -256,56 +292,165 @@ export default function CheckoutPage() {
 
         {/* Left Form: Details, Delivery, Time, Payment */}
         <div className="lg:col-span-8 space-y-8">
-          {/* 1. Dati del Cliente */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/25 shadow-xs space-y-4">
-            <h3 className="text-base font-black text-[#57382E] flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#FFE29A] text-xs font-black flex items-center justify-center">1</span>
-              <span>I Tuoi Dati di Contatto</span>
-            </h3>
+          {/* 1. Account & Dati del Cliente */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/25 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#F5A16C]/20">
+              <h3 className="text-base font-black text-[#57382E] flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#FFE29A] text-xs font-black flex items-center justify-center">1</span>
+                <span>Registrazione & Dati Cliente</span>
+              </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="text-[11px] font-bold text-[#57382E] block mb-1">
-                  Nome e Cognome*
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder="Giulia De Angelis"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#57382E] block mb-1">
-                  Cellulare / WhatsApp*
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={customerPhone}
-                  onChange={e => setCustomerPhone(e.target.value)}
-                  placeholder="+39 347 1234567"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#57382E] block mb-1">
-                  Email (per conferma)*
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={customerEmail}
-                  onChange={e => setCustomerEmail(e.target.value)}
-                  placeholder="giulia@email.it"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
-                />
-              </div>
+              {customer ? (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-emerald-700 font-bold flex items-center gap-1">
+                    <UserCheck className="w-4 h-4" /> Ciao, {customer.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="text-[#DE7E42] hover:underline font-semibold ml-2"
+                  >
+                    Esci / Cambia
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      authMode === 'register'
+                        ? 'bg-[#FFE29A] text-[#57382E] shadow-xs'
+                        : 'text-[#7E5649] hover:bg-[#FFF8EF]'
+                    }`}
+                  >
+                    Nuovo Cliente (Registrati)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      authMode === 'login'
+                        ? 'bg-[#FFE29A] text-[#57382E] shadow-xs'
+                        : 'text-[#7E5649] hover:bg-[#FFF8EF]'
+                    }`}
+                  >
+                    Ho già un account (Accedi)
+                  </button>
+                </div>
+              )}
             </div>
+
+            {authError && (
+              <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-semibold">
+                {authError}
+              </p>
+            )}
+
+            {!customer && authMode === 'login' ? (
+              <div className="p-4 bg-[#FFF8EF] rounded-2xl border border-[#F5A16C]/25 space-y-3">
+                <p className="text-xs text-[#7E5649]">
+                  Inserisci la tua email e la password scelta in precedenza per caricare automaticamente i tuoi dati di consegna.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">Email*</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={e => setCustomerEmail(e.target.value)}
+                      placeholder="la-tua-email@email.it"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs text-[#57382E]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">Password (opzionale se primo accesso)</label>
+                    <input
+                      type="password"
+                      value={authPassword}
+                      onChange={e => setAuthPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#F5A16C]/30 text-xs text-[#57382E]"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={authLoading}
+                  onClick={async () => {
+                    if (!customerEmail) {
+                      setAuthError('Inserisci la tua email.');
+                      return;
+                    }
+                    setAuthLoading(true);
+                    setAuthError('');
+                    const res = await login(customerEmail, authPassword);
+                    if (!res.success) {
+                      setAuthError(res.error || 'Accesso non riuscito.');
+                    }
+                    setAuthLoading(false);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-[#57382E] text-white text-xs font-bold hover:bg-[#7E5649] transition-all flex items-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>{authLoading ? 'Verifica in corso...' : 'Accedi e carica i miei dati'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">
+                      Nome e Cognome*
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={customerName}
+                      onChange={e => setCustomerName(e.target.value)}
+                      placeholder="Giulia De Angelis"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">
+                      Cellulare / WhatsApp*
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={customerPhone}
+                      onChange={e => setCustomerPhone(e.target.value)}
+                      placeholder="+39 347 1234567"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-[#57382E] block mb-1">
+                      Email (per ricevuta e account)*
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={customerEmail}
+                      onChange={e => setCustomerEmail(e.target.value)}
+                      placeholder="giulia@email.it"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-medium text-[#57382E]"
+                    />
+                  </div>
+                </div>
+
+                {!customer && (
+                  <div className="p-3 bg-[#FFE29A]/20 rounded-2xl border border-[#FFE29A] flex items-center justify-between text-xs">
+                    <span className="text-[#57382E] font-medium">
+                      🔒 Registrazione istantanea: confermando l'ordine, il tuo profilo cliente verrà memorizzato nel forno per gli acquisti futuri.
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 2. Indirizzo e Consegna a Domicilio */}

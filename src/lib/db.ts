@@ -129,6 +129,23 @@ export async function initPostgresTables(): Promise<void> {
       );
     `);
 
+    // 7. Customers / Users table
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        password_hash TEXT,
+        address TEXT,
+        city TEXT DEFAULT 'Roma',
+        cap TEXT DEFAULT '00156',
+        notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        last_login_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     // SEED: Products if empty
     const prodCountRes = await p.query('SELECT COUNT(*) FROM products');
     if (parseInt(prodCountRes.rows[0].count, 10) === 0) {
@@ -548,6 +565,98 @@ export const PostgresService = {
       'UPDATE custom_cake_requests SET status = $1, quote_amount = COALESCE($2, quote_amount) WHERE id = $3',
       [status, quoteAmount || null, id]
     );
+  },
+
+  // CUSTOMERS / USERS
+  async getCustomers(): Promise<any[]> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const res = await p.query('SELECT id, name, email, phone, address, city, cap, notes, created_at, last_login_at FROM customers ORDER BY created_at DESC');
+    return res.rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      phone: r.phone || '',
+      address: r.address || '',
+      city: r.city || 'Roma',
+      cap: r.cap || '00156',
+      notes: r.notes || '',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
+      lastLoginAt: r.last_login_at ? new Date(r.last_login_at).toISOString() : undefined,
+    }));
+  },
+
+  async findCustomerByEmail(email: string): Promise<any | null> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const cleanEmail = email.trim().toLowerCase();
+    const res = await p.query('SELECT * FROM customers WHERE LOWER(email) = $1 LIMIT 1', [cleanEmail]);
+    if (res.rows.length === 0) return null;
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      phone: r.phone || '',
+      passwordHash: r.password_hash || '',
+      address: r.address || '',
+      city: r.city || 'Roma',
+      cap: r.cap || '00156',
+      notes: r.notes || '',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
+      lastLoginAt: r.last_login_at ? new Date(r.last_login_at).toISOString() : undefined,
+    };
+  },
+
+  async registerCustomer(data: { name: string; email: string; phone?: string; passwordHash?: string; address?: string; city?: string; cap?: string; notes?: string }): Promise<any> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const id = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const cleanEmail = data.email.trim().toLowerCase();
+
+    const res = await p.query(
+      `INSERT INTO customers (id, name, email, phone, password_hash, address, city, cap, notes, created_at, last_login_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+       ON CONFLICT (email) DO UPDATE SET
+         name = EXCLUDED.name,
+         phone = COALESCE(EXCLUDED.phone, customers.phone),
+         address = COALESCE(EXCLUDED.address, customers.address),
+         city = COALESCE(EXCLUDED.city, customers.city),
+         cap = COALESCE(EXCLUDED.cap, customers.cap),
+         notes = COALESCE(EXCLUDED.notes, customers.notes),
+         last_login_at = NOW()
+       RETURNING id, name, email, phone, address, city, cap, notes, created_at, last_login_at`,
+      [
+        id,
+        data.name.trim(),
+        cleanEmail,
+        data.phone?.trim() || null,
+        data.passwordHash || null,
+        data.address?.trim() || null,
+        data.city?.trim() || 'Roma',
+        data.cap?.trim() || '00156',
+        data.notes?.trim() || null,
+      ]
+    );
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      phone: r.phone || '',
+      address: r.address || '',
+      city: r.city || 'Roma',
+      cap: r.cap || '00156',
+      notes: r.notes || '',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
+      lastLoginAt: r.last_login_at ? new Date(r.last_login_at).toISOString() : undefined,
+    };
+  },
+
+  async updateCustomerLastLogin(email: string): Promise<void> {
+    await initPostgresTables();
+    const p = getDbPool();
+    await p.query('UPDATE customers SET last_login_at = NOW() WHERE LOWER(email) = $1', [email.trim().toLowerCase()]);
   },
 };
 

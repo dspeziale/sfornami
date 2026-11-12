@@ -3,6 +3,7 @@ import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { CartProvider } from '@/context/CartContext';
+import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
@@ -116,17 +117,19 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col font-sans bg-[#FFF8EF] text-[#57382E]">
-        <SettingsProvider>
-          <CartProvider>
-            <Navbar />
-            <div className="flex-1">{children}</div>
-            <Footer />
-            <CartDrawer />
-            <MobileCartBar />
-            <WhatsAppFloatingButton />
-            <CookieBanner />
-          </CartProvider>
-        </SettingsProvider>
+        <CustomerAuthProvider>
+          <SettingsProvider>
+            <CartProvider>
+              <Navbar />
+              <div className="flex-1">{children}</div>
+              <Footer />
+              <CartDrawer />
+              <MobileCartBar />
+              <WhatsAppFloatingButton />
+              <CookieBanner />
+            </CartProvider>
+          </SettingsProvider>
+        </CustomerAuthProvider>
       </body>
     </html>
   );
