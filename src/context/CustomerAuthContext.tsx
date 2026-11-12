@@ -124,3 +124,4 @@ export const useCustomerAuth = () => {
   }
   return context;
 };
+

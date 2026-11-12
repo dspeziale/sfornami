@@ -17,11 +17,13 @@ import {
 import confetti from 'canvas-confetti';
 import { DataService } from '@/lib/store';
 import { Order } from '@/lib/types';
+import { useSettings } from '@/context/SettingsContext';
 import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 
 function OrderConfirmedContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
+  const { getWhatsAppLink } = useSettings();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,10 +52,10 @@ function OrderConfirmedContent() {
   };
 
   const waConfirmLink = order
-    ? `https://wa.me/${INITIAL_STORE_SETTINGS.whatsappNumber}?text=${encodeURIComponent(
+    ? getWhatsAppLink(
         `Ciao SFORNAMÌ! Ho appena confermato l'ordine ${order.orderNumber} sul sito a nome di ${order.customerName}. Grazie!`
-      )}`
-    : `https://wa.me/${INITIAL_STORE_SETTINGS.whatsappNumber}`;
+      )
+    : getWhatsAppLink('Ciao SFORNAMÌ! Ho appena completato un ordine sul vostro sito.');
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-20 space-y-8 animate-fadeIn">

@@ -92,3 +92,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Registrazione non riuscita' }, { status: 500 });
   }
 }
+

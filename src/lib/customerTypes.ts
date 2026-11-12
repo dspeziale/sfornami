@@ -10,3 +10,4 @@ export interface CustomerUser {
   createdAt: string;
   lastLoginAt?: string;
 }
+
