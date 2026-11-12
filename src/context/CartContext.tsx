@@ -56,6 +56,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isLoaded]);
 
   const addItem = (product: Product, quantity = 1, variant?: ProductVariant, notes?: string) => {
+    // Strip heavy gallery/extra images from cart item to keep localStorage featherweight on mobile
+    const lightweightProduct: Product = {
+      ...product,
+      images: [product.imageUrl], // only keep the primary image
+    };
+
     setItems(current => {
       const uniqueId = variant ? `${product.id}-${variant.name}` : product.id;
       const existingIndex = current.findIndex(item => item.id === uniqueId);
@@ -70,7 +76,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ...current,
           {
             id: uniqueId,
-            product,
+            product: lightweightProduct,
             selectedVariant: variant,
             quantity,
             notes,

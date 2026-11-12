@@ -119,6 +119,12 @@ const INITIAL_DEMO_CAKE_REQUESTS: CustomCakeRequest[] = [
 ];
 
 export const DataService = {
+  // Synchronous cache accessor for instant mobile rendering
+  getCachedProducts(): Product[] | null {
+    if (typeof window === 'undefined') return null;
+    return getLocalItem<Product[] | null>(STORAGE_KEYS.PRODUCTS, null);
+  },
+
   // --- PRODUCTS ---
   async getProducts(): Promise<Product[]> {
     // 1. If running in browser, try fetching centralized server data

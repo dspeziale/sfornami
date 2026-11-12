@@ -7,6 +7,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { WhatsAppFloatingButton } from '@/components/common/WhatsAppFloatingButton';
+import { MobileCartBar } from '@/components/cart/MobileCartBar';
 import { CookieBanner } from '@/components/common/CookieBanner';
 import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 
@@ -121,6 +122,7 @@ export default function RootLayout({
             <div className="flex-1">{children}</div>
             <Footer />
             <CartDrawer />
+            <MobileCartBar />
             <WhatsAppFloatingButton />
             <CookieBanner />
           </CartProvider>

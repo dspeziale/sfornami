@@ -23,8 +23,18 @@ function MenuContent() {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
 
   useEffect(() => {
+    // 1. Instant display from local storage cache if available
+    const cached = DataService.getCachedProducts();
+    if (cached && cached.length > 0) {
+      setProducts(cached);
+      setLoading(false);
+    }
+
+    // 2. Refresh from server in background / fetch fresh
     DataService.getProducts().then(items => {
       setProducts(items);
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
   }, []);

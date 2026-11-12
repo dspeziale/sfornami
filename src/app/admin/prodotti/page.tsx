@@ -59,8 +59,8 @@ export default function AdminProdottiPage() {
   const [formDailyQuota, setFormDailyQuota] = useState<number>(30);
   const [formBadge, setFormBadge] = useState('');
 
-  // Helper client-side image resizer to keep storage optimized and fast
-  const resizeImageFile = (file: File, maxDim = 1200, quality = 0.85): Promise<string> => {
+  // Helper client-side image resizer to keep storage light and snappy on mobile networks
+  const resizeImageFile = (file: File, maxDim = 800, quality = 0.75): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = event => {

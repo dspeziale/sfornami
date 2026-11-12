@@ -22,12 +22,21 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Instant hydration from cached storage if present
+    const cachedProducts = DataService.getCachedProducts();
+    if (cachedProducts && cachedProducts.length > 0) {
+      setProducts(cachedProducts);
+      setLoading(false);
+    }
+
     Promise.all([
       DataService.getProducts(),
       DataService.getHomepageContent(),
     ]).then(([items, content]) => {
       setProducts(items);
       if (content) setHomeContent(content);
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
 

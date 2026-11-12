@@ -13,7 +13,7 @@ export const WhatsAppFloatingButton: React.FC = () => {
   );
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2 group">
+    <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-30 flex flex-col items-end gap-2 group">
       {/* Friendly pop-up balloon */}
       {showTooltip && (
         <div className="bg-white text-[#57382E] p-3 rounded-2xl shadow-xl border border-[#A8D8BD] max-w-xs text-xs font-medium animate-bounce flex items-start gap-2 relative">
