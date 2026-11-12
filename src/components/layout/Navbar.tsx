@@ -30,15 +30,18 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* Top Banner */}
-      <div className="bg-[#FFE29A] text-[#57382E] text-xs font-semibold py-1.5 px-4 border-b border-[#F5A16C]/30">
+      <div className="bg-[#FFE29A] text-[#57382E] text-xs font-semibold py-1.5 px-3 sm:px-4 border-b border-[#F5A16C]/30">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 relative">
+            <span className="flex h-2 w-2 relative shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F28BA6] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DE7E42]"></span>
             </span>
-            <span className="truncate">
-              🥖 Laboratorio artigianale di panetteria e pasticceria a Roma • Solo ordini online con consegna a domicilio
+            <span className="text-[11px] sm:text-xs leading-tight">
+              🥖 Laboratorio artigianale di panetteria e pasticceria a Roma
+              <span className="block sm:inline sm:before:content-['•_'] font-bold text-[#DE7E42]">
+                Solo ordini online con consegna a domicilio
+              </span>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-4 text-[11px] font-bold">

@@ -215,7 +215,45 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <form onSubmit={handleConfirmOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <form onSubmit={handleConfirmOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Mobile-First: Order summary on top on mobile, on the right on desktop */}
+        <div className="lg:hidden w-full">
+          <div className="bg-white rounded-3xl p-5 border-2 border-[#F5A16C]/30 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F5A16C]/20">
+              <h3 className="text-base font-black text-[#57382E]">Riepilogo Ordine ({items.length} {items.length === 1 ? 'prodotto' : 'prodotti'})</h3>
+              <Link href="/carrello" className="text-xs font-bold text-[#DE7E42] hover:underline flex items-center gap-1">
+                <ArrowLeft className="w-3 h-3" /> Modifica
+              </Link>
+            </div>
+
+            <div className="space-y-2 max-h-44 overflow-y-auto pr-1 divide-y divide-[#F5A16C]/10 text-xs">
+              {items.map(item => {
+                const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+                return (
+                  <div key={item.id} className="pt-2 first:pt-0 flex justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#57382E] truncate">
+                        {item.quantity}x {item.product.name}
+                      </p>
+                      {item.selectedVariant && (
+                        <p className="text-[10px] text-[#DE7E42]">{item.selectedVariant.name}</p>
+                      )}
+                    </div>
+                    <span className="font-semibold text-[#57382E] shrink-0">
+                      €{(uPrice * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-3 border-t border-[#F5A16C]/20 flex justify-between items-baseline text-sm font-black text-[#57382E]">
+              <span>Totale da Pagare:</span>
+              <span className="text-xl text-[#DE7E42]">€{total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Left Form: Details, Delivery, Time, Payment */}
         <div className="lg:col-span-8 space-y-8">
           {/* 1. Dati del Cliente */}
@@ -433,18 +471,18 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Right Summary Sidebar */}
+        {/* Summary Sidebar (Desktop right, Mobile bottom) */}
         <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
           <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/30 shadow-md space-y-5">
-            <div className="flex items-center justify-between pb-4 border-b border-[#F5A16C]/20">
+            <div className="hidden lg:flex items-center justify-between pb-4 border-b border-[#F5A16C]/20">
               <h3 className="text-base font-black text-[#57382E]">Riepilogo Ordine</h3>
               <Link href="/carrello" className="text-xs font-bold text-[#DE7E42] hover:underline flex items-center gap-1">
                 <ArrowLeft className="w-3 h-3" /> Modifica
               </Link>
             </div>
 
-            {/* Items mini list */}
-            <div className="space-y-3 max-h-60 overflow-y-auto pr-1 divide-y divide-[#F5A16C]/10 text-xs">
+            {/* Items mini list (Desktop) */}
+            <div className="hidden lg:block space-y-3 max-h-60 overflow-y-auto pr-1 divide-y divide-[#F5A16C]/10 text-xs">
               {items.map(item => {
                 const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
                 return (
@@ -466,7 +504,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Calculations */}
-            <div className="pt-4 border-t border-[#F5A16C]/20 space-y-2 text-xs">
+            <div className="pt-0 lg:pt-4 lg:border-t border-[#F5A16C]/20 space-y-2 text-xs">
               <div className="flex justify-between text-[#7E5649]">
                 <span>Subtotale prodotti</span>
                 <span className="font-bold text-[#57382E]">€{subtotal.toFixed(2)}</span>

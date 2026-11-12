@@ -5,7 +5,7 @@ import { MessageCircle, X } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 
 export const WhatsAppFloatingButton: React.FC = () => {
-  const [showTooltip, setShowTooltip] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(false);
   const { getWhatsAppLink } = useSettings();
 
   const waLink = getWhatsAppLink(
