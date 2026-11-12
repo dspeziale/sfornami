@@ -1,9 +1,9 @@
 # 1. Base image
 FROM node:24-alpine AS base
+RUN apk add --no-cache libc6-compat
 
 # 2. Dependencies
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -15,11 +15,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
 # 4. Runner
 FROM base AS runner
-RUN apk add --no-cache curl wget libc6-compat
+RUN apk add --no-cache curl wget
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
