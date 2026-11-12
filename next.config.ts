@@ -5,8 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   typescript: {
-    // Already type-checked in CI/pre-commit
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
   turbopack: {
     rules: {
