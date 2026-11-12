@@ -146,6 +146,26 @@ export async function initPostgresTables(): Promise<void> {
       );
     `);
 
+    // 8. Admin Credentials table
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS admin_credentials (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Seed default admin credentials if table empty
+    const adminCountRes = await p.query('SELECT COUNT(*) FROM admin_credentials');
+    if (parseInt(adminCountRes.rows[0].count, 10) === 0) {
+      await p.query(
+        `INSERT INTO admin_credentials (id, email, password_hash, updated_at)
+         VALUES ('default', 'admin@sfornami.it', 'sfornami2026', NOW())
+         ON CONFLICT (id) DO NOTHING`
+      );
+    }
+
     // SEED: Products if empty
     const prodCountRes = await p.query('SELECT COUNT(*) FROM products');
     if (parseInt(prodCountRes.rows[0].count, 10) === 0) {
@@ -657,6 +677,34 @@ export const PostgresService = {
     await initPostgresTables();
     const p = getDbPool();
     await p.query('UPDATE customers SET last_login_at = NOW() WHERE LOWER(email) = $1', [email.trim().toLowerCase()]);
+  },
+
+  // ADMIN CREDENTIALS
+  async getAdminCredentials(): Promise<{ email: string; passwordHash: string }> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const res = await p.query('SELECT email, password_hash FROM admin_credentials WHERE id = $1 LIMIT 1', ['default']);
+    if (res.rows.length === 0) {
+      return { email: 'admin@sfornami.it', passwordHash: 'sfornami2026' };
+    }
+    return {
+      email: res.rows[0].email,
+      passwordHash: res.rows[0].password_hash,
+    };
+  },
+
+  async updateAdminCredentials(email: string, passwordHash: string): Promise<void> {
+    await initPostgresTables();
+    const p = getDbPool();
+    await p.query(
+      `INSERT INTO admin_credentials (id, email, password_hash, updated_at)
+       VALUES ('default', $1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         email = EXCLUDED.email,
+         password_hash = EXCLUDED.password_hash,
+         updated_at = NOW()`,
+      [email.trim().toLowerCase(), passwordHash.trim()]
+    );
   },
 };
 

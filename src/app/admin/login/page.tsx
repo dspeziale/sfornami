@@ -8,30 +8,36 @@ import { Logo } from '@/components/brand/Logo';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@sfornami.it');
-  const [password, setPassword] = useState('sfornami2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simple robust authentication check
-    setTimeout(() => {
-      if (
-        (email.trim().toLowerCase() === 'admin@sfornami.it' && password === 'sfornami2026') ||
-        (email.trim().length > 0 && password.length >= 6)
-      ) {
+    try {
+      const res = await fetch('/api/admin/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', email, password }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
         localStorage.setItem('sfornami_admin_auth', 'true');
-        localStorage.setItem('sfornami_admin_email', email);
+        localStorage.setItem('sfornami_admin_email', data.email);
         router.push('/admin');
       } else {
-        setError('Credenziali non corrette. Utilizza admin@sfornami.it / sfornami2026');
+        setError(data.error || 'Credenziali non corrette.');
         setLoading(false);
       }
-    }, 400);
+    } catch (err) {
+      setError('Errore di comunicazione con il server. Riprova.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,11 +101,15 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Quick Demo Fill hint */}
+            {/* Security Notice */}
             <div className="p-3 bg-[#FFE29A]/30 rounded-xl text-[11px] text-[#57382E] border border-[#FFE29A] space-y-1">
-              <p className="font-bold">🔑 Credenziali dimostrative iniziali:</p>
-              <p>Email: <code className="bg-white px-1.5 py-0.5 rounded-md font-mono text-xs">admin@sfornami.it</code></p>
-              <p>Password: <code className="bg-white px-1.5 py-0.5 rounded-md font-mono text-xs">sfornami2026</code></p>
+              <p className="font-bold flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                <span>Credenziali di default modificabili:</span>
+              </p>
+              <p className="text-[10px] text-[#7E5649]">
+                Se non le hai ancora modificate, usa: <code>admin@sfornami.it</code> / <code>sfornami2026</code>. Puoi cambiarle in qualsiasi momento da <strong>Impostazioni Forno</strong>.
+              </p>
             </div>
 
             <button
