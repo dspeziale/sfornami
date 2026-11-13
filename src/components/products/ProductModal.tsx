@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { X, ShoppingBag, Check, ShieldAlert, Sparkles, Plus, Minus } from 'lucide-react';
-import { Product, ProductVariant } from '@/lib/types';
+import { Product, ProductVariant, ProductAddon, SelectedAddon } from '@/lib/types';
 import { ALLERGENS_LIST } from '@/lib/initialData';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 
 interface ProductModalProps {
   product: Product | null;
@@ -13,9 +14,11 @@ interface ProductModalProps {
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const { addItem } = useCart();
+  const { settings } = useSettings();
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>(
     product?.variants && product.variants.length > 0 ? product.variants[0] : undefined
   );
+  const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [addedAnimation, setAddedAnimation] = useState(false);
@@ -28,10 +31,32 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     : [product.imageUrl];
   const activeImageUrl = galleryImages[activeImageIndex] || product.imageUrl;
 
-  const currentPrice = product.price + (selectedVariant?.priceModifier || 0);
+  const availableAddons: ProductAddon[] = (product.addons && product.addons.length > 0)
+    ? product.addons
+    : (settings?.defaultAddons || []);
+
+  const toggleAddon = (addon: ProductAddon) => {
+    setSelectedAddons(prev => {
+      const exists = prev.find(a => a.addonId === addon.id);
+      if (exists) {
+        return prev.filter(a => a.addonId !== addon.id);
+      } else {
+        return [...prev, { addonId: addon.id, name: addon.name, price: Number(addon.price), customText: '' }];
+      }
+    });
+  };
+
+  const updateAddonText = (addonId: string, text: string) => {
+    setSelectedAddons(prev =>
+      prev.map(a => (a.addonId === addonId ? { ...a, customText: text } : a))
+    );
+  };
+
+  const addonsTotal = selectedAddons.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+  const currentPrice = product.price + (selectedVariant?.priceModifier || 0) + addonsTotal;
 
   const handleAddToCart = () => {
-    addItem(product, quantity, selectedVariant, notes);
+    addItem(product, quantity, selectedVariant, notes, selectedAddons);
     setAddedAnimation(true);
     setTimeout(() => {
       setAddedAnimation(false);
@@ -145,6 +170,69 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         )}
                       </button>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Personalizzazioni & Aggiunte (Confezione regalo, scritte, etc.) */}
+              {availableAddons.length > 0 && (
+                <div className="pt-2 border-t border-[#F5A16C]/20">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] sm:text-xs font-bold text-[#57382E] flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-[#DE7E42]" />
+                      <span>Aggiunte & Personalizzazioni:</span>
+                    </label>
+                    {selectedAddons.length > 0 && (
+                      <span className="text-[10px] font-bold text-[#DE7E42]">
+                        +{selectedAddons.length} {selectedAddons.length === 1 ? 'selezionata' : 'selezionate'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {availableAddons.map(addon => {
+                      const isSelected = selectedAddons.some(a => a.addonId === addon.id);
+                      const selectedItem = selectedAddons.find(a => a.addonId === addon.id);
+                      return (
+                        <div
+                          key={addon.id}
+                          className={`p-2 rounded-xl border transition-all ${
+                            isSelected
+                              ? 'bg-[#FFE29A]/50 border-[#DE7E42] shadow-xs'
+                              : 'bg-white border-[#F5A16C]/25 hover:bg-[#FFF8EF]'
+                          }`}
+                        >
+                          <label className="flex items-center justify-between cursor-pointer gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleAddon(addon)}
+                                className="rounded text-[#DE7E42] focus:ring-[#DE7E42] w-4 h-4 shrink-0"
+                              />
+                              <span className="text-xs font-bold text-[#57382E] truncate">
+                                {addon.name}
+                              </span>
+                            </div>
+                            <span className="text-xs font-black text-[#DE7E42] shrink-0">
+                              +€{Number(addon.price).toFixed(2)}
+                            </span>
+                          </label>
+
+                          {isSelected && addon.allowsCustomText && (
+                            <div className="mt-1.5 pt-1.5 border-t border-[#F5A16C]/20 pl-6">
+                              <input
+                                type="text"
+                                value={selectedItem?.customText || ''}
+                                onChange={e => updateAddonText(addon.id, e.target.value)}
+                                placeholder="Scrivi il testo desiderato (es. 'Buon Compleanno Marco!')"
+                                className="w-full px-2.5 py-1 text-xs rounded-lg bg-white border border-[#F5A16C]/40 text-[#57382E] placeholder:text-[#9E7D73] focus:outline-none focus:ring-1 focus:ring-[#DE7E42]"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

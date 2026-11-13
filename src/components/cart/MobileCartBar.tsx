@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 
 export const MobileCartBar: React.FC = () => {
   const pathname = usePathname();
   const { totalItemsCount, subtotal, discount, toggleCart } = useCart();
+  const { settings } = useSettings();
 
   // Don't show the bar if cart is empty or user is already in /checkout or /carrello or /admin
   if (totalItemsCount === 0) return null;
@@ -37,9 +39,16 @@ export const MobileCartBar: React.FC = () => {
             </span>
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-[#FFE29A] font-bold truncate">
-              Carrello ({totalItemsCount} {totalItemsCount === 1 ? 'pz' : 'pz'})
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-[#FFE29A] font-bold truncate">
+                Carrello ({totalItemsCount} {totalItemsCount === 1 ? 'pz' : 'pz'})
+              </p>
+              {subtotal >= settings.freeDeliveryThreshold && (
+                <span className="text-[9px] bg-emerald-500 text-white font-black px-1.5 py-0.5 rounded-full uppercase leading-none">
+                  Consegna Gratis
+                </span>
+              )}
+            </div>
             <p className="text-sm sm:text-base font-black leading-tight text-white">
               €{total.toFixed(2)}
             </p>

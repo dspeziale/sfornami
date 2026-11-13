@@ -66,8 +66,10 @@ export function generateWhatsAppOrderMessage({
     const name = isCartItem ? item.product.name : item.name;
     const qty = item.quantity;
     const variant = isCartItem ? item.selectedVariant?.name : item.variant;
+    const addons = isCartItem ? item.selectedAddons : (item as any).addons;
+    const addonsTotal = (addons || []).reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0);
     const singlePrice = isCartItem
-      ? item.product.price + (item.selectedVariant?.priceModifier || 0)
+      ? item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal
       : item.price;
     const itemTotal = singlePrice * qty;
 
@@ -75,6 +77,16 @@ export function generateWhatsAppOrderMessage({
     if (variant) itemLine += ` _(${variant})_`;
     itemLine += ` - €${itemTotal.toFixed(2)}`;
     lines.push(itemLine);
+
+    if (addons && addons.length > 0) {
+      addons.forEach((addon: any) => {
+        let addonLine = `   └ 🎁 _${addon.name}_ (+€${Number(addon.price).toFixed(2)})`;
+        if (addon.customText) {
+          addonLine += ` [Dedica: "${addon.customText}"]`;
+        }
+        lines.push(addonLine);
+      });
+    }
   });
 
   lines.push('--------------------------------');

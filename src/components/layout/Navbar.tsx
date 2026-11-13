@@ -11,7 +11,7 @@ import { useSettings } from '@/context/SettingsContext';
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { totalItemsCount, toggleCart } = useCart();
-  const { getWhatsAppLink } = useSettings();
+  const { getWhatsAppLink, settings } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -39,6 +39,9 @@ export const Navbar: React.FC = () => {
               <span>🥖 Laboratorio artigianale di panetteria a Roma</span>
               <div className="font-bold text-[#DE7E42] sm:inline sm:before:content-['•_']">
                 Solo ordini online con consegna a domicilio
+                {settings?.freeDeliveryThreshold && (
+                  <span className="font-black text-[#57382E]"> (Gratis da €{settings.freeDeliveryThreshold.toFixed(0)})</span>
+                )}
               </div>
             </div>
           </div>

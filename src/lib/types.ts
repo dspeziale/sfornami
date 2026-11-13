@@ -28,6 +28,20 @@ export interface ProductVariant {
   priceModifier: number; // additional cost or replacement price
 }
 
+export interface ProductAddon {
+  id: string;
+  name: string; // e.g. "Confezione regalo", "Scritta personalizzata su cialda/targhetta", "Biglietto di auguri"
+  price: number; // additional cost e.g. 2.50
+  allowsCustomText?: boolean; // if true, prompts customer for dedication/custom text
+}
+
+export interface SelectedAddon {
+  addonId: string;
+  name: string;
+  price: number;
+  customText?: string;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -41,6 +55,7 @@ export interface Product {
   unit: string; // e.g. "al pezzo", "al kg", "500g", "vassoio da 6"
   weight?: string;
   variants?: ProductVariant[];
+  addons?: ProductAddon[];
   imageUrl: string;
   images?: string[]; // Multiple uploaded product photographs
   isAvailable: boolean;
@@ -52,9 +67,10 @@ export interface Product {
 }
 
 export interface CartItem {
-  id: string; // unique cart item id (e.g. productId + variant)
+  id: string; // unique cart item id (e.g. productId + variant + addons)
   product: Product;
   selectedVariant?: ProductVariant;
+  selectedAddons?: SelectedAddon[];
   quantity: number;
   notes?: string;
 }
@@ -77,9 +93,11 @@ export interface OrderItem {
   productId: string;
   productName: string;
   variantName?: string;
+  addons?: SelectedAddon[];
   price: number;
   quantity: number;
   total: number;
+  notes?: string;
 }
 
 export interface Order {
@@ -155,6 +173,7 @@ export interface StoreSettings {
   stripeEnabled: boolean;
   pickupOpeningHours: string;
   specialNotice?: string;
+  defaultAddons?: ProductAddon[];
 }
 
 export interface AllergenMeta {

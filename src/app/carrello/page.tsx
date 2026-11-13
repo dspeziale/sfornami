@@ -53,7 +53,7 @@ export default function CarrelloPage() {
       {/* Breadcrumb & Header */}
       <div>
         <Link
-          href="/menu"
+          href="/"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-[#DE7E42] hover:underline mb-2"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -72,7 +72,7 @@ export default function CarrelloPage() {
             Aggiungi pane caldo, pizza scrocchiarella, maritozzi o biscotti artigianali prima di procedere.
           </p>
           <Link
-            href="/menu"
+            href="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#F5A16C] text-white font-bold text-xs hover:bg-[#DE7E42] shadow-md transition-all hover:scale-105"
           >
             <ShoppingBag className="w-4 h-4" />
@@ -80,38 +80,79 @@ export default function CarrelloPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Items Table / Cards */}
-          <div className="lg:col-span-8 space-y-4">
-            <div className="bg-white rounded-3xl p-6 border-2 border-[#F5A16C]/20 shadow-sm divide-y divide-[#F5A16C]/15">
-              {items.map(item => {
-                const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
-                const itemTotal = unitPrice * item.quantity;
+        <div className="space-y-6">
+          {/* Free Delivery Motivational Bar */}
+          <div className="bg-white rounded-2xl p-4 border border-[#F5A16C]/30 shadow-xs">
+            {subtotal >= settings.freeDeliveryThreshold ? (
+              <div className="flex items-center gap-2 text-xs font-black text-emerald-800 bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-xs">
+                <span className="text-xl">🎉</span>
+                <span>Ottimo! Con un ordine di €{subtotal.toFixed(2)} hai diritto alla <strong>CONSEGNA GRATUITA</strong> a Roma!</span>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#57382E]">
+                    Mancano <strong className="text-[#DE7E42]">€{(settings.freeDeliveryThreshold - subtotal).toFixed(2)}</strong> per ottenere la Consegna Gratuita!
+                  </span>
+                  <span className="text-xs text-[#7E5649] font-bold">
+                    €{subtotal.toFixed(2)} / €{settings.freeDeliveryThreshold.toFixed(2)}
+                  </span>
+                </div>
+                <div className="w-full h-2.5 rounded-full bg-gray-200 overflow-hidden">
+                  <div
+                    className="h-full bg-linear-to-r from-[#F5A16C] to-[#DE7E42] transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(5, (subtotal / settings.freeDeliveryThreshold) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
-                return (
-                  <div key={item.id} className="py-5 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <img
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      className="w-20 h-20 rounded-2xl object-cover shrink-0 bg-[#FFE29A]/30 border border-[#F5A16C]/20"
-                    />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* Items Table / Cards */}
+            <div className="lg:col-span-8 space-y-4">
+              <div className="bg-white rounded-3xl p-6 border-2 border-[#F5A16C]/20 shadow-sm divide-y divide-[#F5A16C]/15">
+                {items.map(item => {
+                  const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+                  const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
+                  const itemTotal = unitPrice * item.quantity;
 
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <h4 className="text-sm font-black text-[#57382E]">{item.product.name}</h4>
-                      {item.selectedVariant && (
-                        <p className="text-xs text-[#DE7E42] font-semibold">
-                          Variante: {item.selectedVariant.name}
+                  return (
+                    <div key={item.id} className="py-5 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <img
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        className="w-20 h-20 rounded-2xl object-cover shrink-0 bg-[#FFE29A]/30 border border-[#F5A16C]/20"
+                      />
+
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <h4 className="text-sm font-black text-[#57382E]">{item.product.name}</h4>
+                        {item.selectedVariant && (
+                          <p className="text-xs text-[#DE7E42] font-semibold">
+                            Variante: {item.selectedVariant.name}
+                          </p>
+                        )}
+                        {item.selectedAddons && item.selectedAddons.length > 0 && (
+                          <div className="space-y-0.5 text-xs text-[#DE7E42] font-semibold">
+                            {item.selectedAddons.map((addon, aIdx) => (
+                              <p key={aIdx} className="flex items-center gap-1">
+                                <span>+ {addon.name} (+€{Number(addon.price).toFixed(2)})</span>
+                                {addon.customText && (
+                                  <span className="text-[#57382E] italic">"{addon.customText}"</span>
+                                )}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-xs text-[#7E5649]">
+                          €{unitPrice.toFixed(2)} {item.product.unit && `• ${item.product.unit}`}
                         </p>
-                      )}
-                      <p className="text-xs text-[#7E5649]">
-                        €{unitPrice.toFixed(2)} {item.product.unit && `• ${item.product.unit}`}
-                      </p>
-                      {item.notes && (
-                        <p className="text-[11px] text-[#9E7D73] italic">
-                          Nota: "{item.notes}"
-                        </p>
-                      )}
-                    </div>
+                        {item.notes && (
+                          <p className="text-[11px] text-[#9E7D73] italic">
+                            Nota: "{item.notes}"
+                          </p>
+                        )}
+                      </div>
 
                     {/* Quantity controls */}
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
@@ -185,7 +226,7 @@ export default function CarrelloPage() {
                 <span className="text-xl text-[#DE7E42]">€{total.toFixed(2)}</span>
               </div>
               <p className="text-[10px] text-[#9E7D73]">
-                * Consegna a domicilio (€3.50, gratuita sopra €40) o Ritiro Gratuito al forno.
+                * Consegna a domicilio: €{settings.deliveryFee.toFixed(2)} (GRATUITA per ordini da €{settings.freeDeliveryThreshold.toFixed(2)} in su).
               </p>
             </div>
 
@@ -244,8 +285,9 @@ export default function CarrelloPage() {
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 }
 

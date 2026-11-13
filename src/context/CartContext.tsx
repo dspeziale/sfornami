@@ -1,11 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { CartItem, Product, ProductVariant } from '@/lib/types';
+import { CartItem, Product, ProductVariant, SelectedAddon } from '@/lib/types';
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, variant?: ProductVariant, notes?: string) => void;
+  addItem: (
+    product: Product,
+    quantity?: number,
+    variant?: ProductVariant,
+    notes?: string,
+    selectedAddons?: SelectedAddon[]
+  ) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   removeItem: (itemId: string) => void;
   clearCart: () => void;
@@ -55,7 +61,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, isLoaded]);
 
-  const addItem = (product: Product, quantity = 1, variant?: ProductVariant, notes?: string) => {
+  const addItem = (
+    product: Product,
+    quantity = 1,
+    variant?: ProductVariant,
+    notes?: string,
+    selectedAddons?: SelectedAddon[]
+  ) => {
     // Strip heavy gallery/extra images from cart item to keep localStorage featherweight on mobile
     const lightweightProduct: Product = {
       ...product,
@@ -63,13 +75,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
 
     setItems(current => {
-      const uniqueId = variant ? `${product.id}-${variant.name}` : product.id;
+      const addonsKey = (selectedAddons || [])
+        .map(a => `${a.addonId}:${a.customText || ''}`)
+        .sort()
+        .join('|');
+      const uniqueId = `${product.id}${variant ? `-${variant.name}` : ''}${addonsKey ? `-${addonsKey}` : ''}`;
       const existingIndex = current.findIndex(item => item.id === uniqueId);
 
       if (existingIndex > -1) {
         const updated = [...current];
         updated[existingIndex].quantity += quantity;
         if (notes) updated[existingIndex].notes = notes;
+        if (selectedAddons) updated[existingIndex].selectedAddons = selectedAddons;
         return updated;
       } else {
         return [
@@ -78,6 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             id: uniqueId,
             product: lightweightProduct,
             selectedVariant: variant,
+            selectedAddons: selectedAddons && selectedAddons.length > 0 ? selectedAddons : undefined,
             quantity,
             notes,
           },
@@ -112,7 +130,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalItemsCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const subtotal = items.reduce((acc, item) => {
-    const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+    const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+    const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
     return acc + unitPrice * item.quantity;
   }, 0);
 

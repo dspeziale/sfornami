@@ -25,18 +25,21 @@ import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
 export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [cakeRequests, setCakeRequests] = useState<CustomCakeRequest[]>([]);
+  const [settings, setSettings] = useState(INITIAL_STORE_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [todayStr, setTodayStr] = useState('');
 
   const loadData = async () => {
     setLoading(true);
     setTodayStr(new Date().toISOString().split('T')[0]);
-    const [fetchedOrders, fetchedCakes] = await Promise.all([
+    const [fetchedOrders, fetchedCakes, fetchedSettings] = await Promise.all([
       DataService.getOrders(),
       DataService.getCustomCakeRequests(),
+      DataService.getSettings(),
     ]);
     setOrders(fetchedOrders);
     setCakeRequests(fetchedCakes);
+    if (fetchedSettings) setSettings(fetchedSettings);
     setLoading(false);
   };
 
@@ -112,6 +115,30 @@ export default function AdminDashboardPage() {
             <span>Nuovo Prodotto</span>
           </Link>
         </div>
+      </div>
+
+      {/* Delivery & Addons quick summary bar */}
+      <div className="bg-linear-to-r from-[#FFE29A]/40 via-[#FFF8EF] to-[#FEEFE6]/60 rounded-3xl p-4 sm:p-5 border border-[#F5A16C]/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#DE7E42] text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Truck className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black uppercase text-[#57382E] tracking-wider">
+              Regole Consegna a Domicilio Attive
+            </h4>
+            <p className="text-xs text-[#7E5649]">
+              Costo Consegna: <strong className="text-[#DE7E42]">€{settings.deliveryFee.toFixed(2)}</strong> • Spedizione GRATIS da: <strong className="text-emerald-700">€{settings.freeDeliveryThreshold.toFixed(2)}</strong> • Minimo d'ordine: <strong>€{settings.minOrderDelivery.toFixed(2)}</strong>
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/admin/impostazioni"
+          className="px-4 py-2 rounded-xl bg-white text-[#57382E] hover:bg-[#FFE29A] border border-[#F5A16C]/40 text-xs font-bold transition-all shadow-xs shrink-0"
+        >
+          ⚙️ Configura Spese di Consegna
+        </Link>
       </div>
 
       {/* KPI Cards Grid */}

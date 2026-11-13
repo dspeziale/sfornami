@@ -24,7 +24,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
-import { Allergen, Product, ProductCategory } from '@/lib/types';
+import { Allergen, Product, ProductCategory, ProductAddon } from '@/lib/types';
 import { ALLERGENS_LIST, CATEGORIES } from '@/lib/initialData';
 
 export default function AdminProdottiPage() {
@@ -58,6 +58,7 @@ export default function AdminProdottiPage() {
   const [formIsSeasonal, setFormIsSeasonal] = useState(false);
   const [formDailyQuota, setFormDailyQuota] = useState<number>(30);
   const [formBadge, setFormBadge] = useState('');
+  const [formAddons, setFormAddons] = useState<ProductAddon[]>([]);
 
   // Helper client-side image resizer to keep storage light and snappy on mobile networks
   const resizeImageFile = (file: File, maxDim = 800, quality = 0.75): Promise<string> => {
@@ -252,6 +253,7 @@ export default function AdminProdottiPage() {
     setFormIsSeasonal(false);
     setFormDailyQuota(30);
     setFormBadge('');
+    setFormAddons([]);
     setModalOpen(true);
   };
 
@@ -279,7 +281,32 @@ export default function AdminProdottiPage() {
     setFormIsSeasonal(Boolean(product.isSeasonal));
     setFormDailyQuota(product.dailyQuota || 30);
     setFormBadge(product.badge || '');
+    setFormAddons(product.addons ? JSON.parse(JSON.stringify(product.addons)) : []);
     setModalOpen(true);
+  };
+
+  const handleAddAddon = (name = '', price = 2.50, allowsCustomText = false) => {
+    setFormAddons(prev => [
+      ...prev,
+      {
+        id: `addon-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        name,
+        price,
+        allowsCustomText,
+      },
+    ]);
+  };
+
+  const handleUpdateAddon = (idx: number, field: keyof ProductAddon, value: any) => {
+    setFormAddons(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleRemoveAddon = (idx: number) => {
+    setFormAddons(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleToggleAvailability = async (productId: string) => {
@@ -319,6 +346,7 @@ export default function AdminProdottiPage() {
       dailyQuota: Number(formDailyQuota),
       badge: formBadge || undefined,
       variants: editingProduct?.variants,
+      addons: formAddons.length > 0 ? formAddons : undefined,
     };
 
     await DataService.saveProduct(productData);
@@ -772,6 +800,120 @@ export default function AdminProdottiPage() {
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Personalizzazioni & Aggiunte a Pagamento (Confezione regalo, scritte, etc.) */}
+              <div className="space-y-3 p-4 rounded-2xl bg-[#FFE29A]/20 border border-[#F5A16C]/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="font-black text-[#57382E] text-xs flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-[#DE7E42]" />
+                      <span>Aggiunte & Personalizzazioni a Pagamento</span>
+                    </label>
+                    <p className="text-[11px] text-[#7E5649]">
+                      Permetti al cliente di aggiungere confezioni regalo, scritte personalizzate o dediche con sovrapprezzo.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddAddon('', 2.50, false)}
+                    className="px-3 py-1.5 rounded-xl bg-[#57382E] hover:bg-[#7E5649] text-white text-xs font-bold flex items-center gap-1 shadow-xs shrink-0 self-start sm:self-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Aggiungi Voce</span>
+                  </button>
+                </div>
+
+                {/* Quick Presets Buttons */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-[#7E5649] self-center mr-1">Preset rapidi:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleAddAddon('Confezione regalo con fiocco artigianale', 2.50, false)}
+                    className="px-2 py-1 rounded-lg bg-white border border-[#F5A16C]/40 text-[#57382E] text-[10px] font-bold hover:bg-[#FFE29A]/40"
+                  >
+                    + Confezione Regalo (€2.50)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddAddon('Scritta personalizzata su cialda/targhetta', 3.00, true)}
+                    className="px-2 py-1 rounded-lg bg-white border border-[#F5A16C]/40 text-[#57382E] text-[10px] font-bold hover:bg-[#FFE29A]/40"
+                  >
+                    + Scritta su Cialda (€3.00 con testo)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddAddon('Biglietto di auguri con dedica a mano', 1.50, true)}
+                    className="px-2 py-1 rounded-lg bg-white border border-[#F5A16C]/40 text-[#57382E] text-[10px] font-bold hover:bg-[#FFE29A]/40"
+                  >
+                    + Biglietto Auguri (€1.50 con dedica)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddAddon('Candeline compleanno scintillanti', 1.50, false)}
+                    className="px-2 py-1 rounded-lg bg-white border border-[#F5A16C]/40 text-[#57382E] text-[10px] font-bold hover:bg-[#FFE29A]/40"
+                  >
+                    + Candeline (€1.50)
+                  </button>
+                </div>
+
+                {/* Addons List */}
+                {formAddons.length === 0 ? (
+                  <p className="text-[11px] text-[#9E7D73] italic bg-white/60 p-2.5 rounded-xl border border-dashed border-[#F5A16C]/30 text-center">
+                    Nessuna aggiunta specifica configurata per questo prodotto. (Verranno mostrate le aggiunte predefinite del negozio, se attive nelle Impostazioni).
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {formAddons.map((addon, aIdx) => (
+                      <div
+                        key={addon.id}
+                        className="bg-white p-2.5 rounded-xl border border-[#F5A16C]/30 flex flex-col sm:flex-row items-start sm:items-center gap-2 shadow-xs"
+                      >
+                        <div className="flex-1 min-w-0 w-full sm:w-auto">
+                          <input
+                            type="text"
+                            required
+                            value={addon.name}
+                            onChange={e => handleUpdateAddon(aIdx, 'name', e.target.value)}
+                            placeholder="Nome aggiunta (es. Confezione regalo)"
+                            className="w-full px-2.5 py-1 text-xs rounded-lg bg-[#FFF8EF] border border-[#F5A16C]/30 font-bold text-[#57382E]"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-bold text-[#57382E]">€</span>
+                            <input
+                              type="number"
+                              step="0.50"
+                              min="0"
+                              required
+                              value={addon.price}
+                              onChange={e => handleUpdateAddon(aIdx, 'price', parseFloat(e.target.value) || 0)}
+                              className="w-16 px-2 py-1 text-xs rounded-lg bg-[#FFF8EF] border border-[#F5A16C]/30 font-black text-[#DE7E42]"
+                            />
+                          </div>
+                          <label className="flex items-center gap-1 text-[11px] font-bold text-[#57382E] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(addon.allowsCustomText)}
+                              onChange={e => handleUpdateAddon(aIdx, 'allowsCustomText', e.target.checked)}
+                              className="rounded text-[#DE7E42]"
+                            />
+                            <span>Chiedi testo</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAddon(aIdx)}
+                            className="p-1 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700"
+                            title="Elimina aggiunta"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

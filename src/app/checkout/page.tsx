@@ -120,12 +120,15 @@ export default function CheckoutPage() {
 
     try {
       const orderItems = items.map(item => {
-        const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+        const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+        const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
         return {
           id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
           productId: item.product.id,
           productName: item.product.name,
           variantName: item.selectedVariant?.name,
+          addons: item.selectedAddons,
+          notes: item.notes,
           price: unitPrice,
           quantity: item.quantity,
           total: unitPrice * item.quantity,
@@ -264,7 +267,8 @@ export default function CheckoutPage() {
 
             <div className="space-y-2 max-h-44 overflow-y-auto pr-1 divide-y divide-[#F5A16C]/10 text-xs">
               {items.map(item => {
-                const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+                const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+                const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
                 return (
                   <div key={item.id} className="pt-2 first:pt-0 flex justify-between gap-2">
                     <div className="min-w-0">
@@ -272,7 +276,17 @@ export default function CheckoutPage() {
                         {item.quantity}x {item.product.name}
                       </p>
                       {item.selectedVariant && (
-                        <p className="text-[10px] text-[#DE7E42]">{item.selectedVariant.name}</p>
+                        <p className="text-[10px] text-[#DE7E42]">Variante: {item.selectedVariant.name}</p>
+                      )}
+                      {item.selectedAddons && item.selectedAddons.length > 0 && (
+                        <div className="text-[10px] text-[#DE7E42] space-y-0.5">
+                          {item.selectedAddons.map((addon, aIdx) => (
+                            <p key={aIdx} className="truncate">
+                              + {addon.name} (+€{Number(addon.price).toFixed(2)})
+                              {addon.customText && ` - "${addon.customText}"`}
+                            </p>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <span className="font-semibold text-[#57382E] shrink-0">
@@ -629,7 +643,8 @@ export default function CheckoutPage() {
             {/* Items mini list (Desktop) */}
             <div className="hidden lg:block space-y-3 max-h-60 overflow-y-auto pr-1 divide-y divide-[#F5A16C]/10 text-xs">
               {items.map(item => {
-                const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+                const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+                const uPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
                 return (
                   <div key={item.id} className="pt-2 first:pt-0 flex justify-between gap-2">
                     <div className="min-w-0">
@@ -637,7 +652,17 @@ export default function CheckoutPage() {
                         {item.quantity}x {item.product.name}
                       </p>
                       {item.selectedVariant && (
-                        <p className="text-[10px] text-[#DE7E42]">{item.selectedVariant.name}</p>
+                        <p className="text-[10px] text-[#DE7E42]">Variante: {item.selectedVariant.name}</p>
+                      )}
+                      {item.selectedAddons && item.selectedAddons.length > 0 && (
+                        <div className="text-[10px] text-[#DE7E42] space-y-0.5">
+                          {item.selectedAddons.map((addon, aIdx) => (
+                            <p key={aIdx} className="truncate">
+                              + {addon.name} (+€{Number(addon.price).toFixed(2)})
+                              {addon.customText && ` - "${addon.customText}"`}
+                            </p>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <span className="font-semibold text-[#57382E] shrink-0">
@@ -663,8 +688,15 @@ export default function CheckoutPage() {
               )}
 
               <div className="flex justify-between text-[#7E5649]">
-                <span>Spese di consegna a Roma</span>
-                <span className="font-bold text-[#57382E]">
+                <div>
+                  <span>Spese di consegna a Roma</span>
+                  {deliveryFee === 0 ? (
+                    <span className="block text-[10px] text-emerald-700 font-bold">🎉 Consegna GRATIS (superiore a €{settings.freeDeliveryThreshold.toFixed(2)})</span>
+                  ) : (
+                    <span className="block text-[10px] text-[#DE7E42]">Gratis per ordini da €{settings.freeDeliveryThreshold.toFixed(2)} in su</span>
+                  )}
+                </div>
+                <span className={`font-black ${deliveryFee === 0 ? 'text-emerald-700' : 'text-[#57382E]'}`}>
                   {deliveryFee === 0 ? 'GRATIS' : `€${deliveryFee.toFixed(2)}`}
                 </span>
               </div>

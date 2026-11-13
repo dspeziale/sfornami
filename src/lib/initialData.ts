@@ -391,6 +391,11 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   stripeEnabled: false, // pronto per integrazione con credenziali
   pickupOpeningHours: 'Laboratorio di produzione: Consegne a domicilio Mar - Dom',
   specialNotice: 'Laboratorio artigianale a Roma (Torraccia): impasti a lenta lievitazione naturale e consegna express a domicilio.',
+  defaultAddons: [
+    { id: 'addon-regalo', name: 'Confezione regalo con fiocco artigianale', price: 2.50 },
+    { id: 'addon-scritta', name: 'Scritta personalizzata su cialda/targhetta', price: 3.00, allowsCustomText: true },
+    { id: 'addon-biglietto', name: 'Biglietto di auguri con dedica a mano', price: 1.50, allowsCustomText: true },
+  ],
 };
 
 export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {

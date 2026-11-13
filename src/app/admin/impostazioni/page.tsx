@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Save, Store, Phone, MessageCircle, MapPin, Truck, Check, Sparkles, CreditCard, Lock, ShieldAlert } from 'lucide-react';
+import { Save, Store, Phone, MessageCircle, MapPin, Truck, Check, Sparkles, CreditCard, Lock, ShieldAlert, Plus, Trash2 } from 'lucide-react';
 import { DataService } from '@/lib/store';
 import { StoreSettings } from '@/lib/types';
 import { INITIAL_STORE_SETTINGS } from '@/lib/initialData';
@@ -230,38 +230,77 @@ export default function AdminImpostazioniPage() {
               </div>
             </label>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="font-bold text-[#57382E] block mb-1">Costo Base Consegna (€)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={settings.deliveryFee}
-                  onChange={e => setSettings({ ...settings, deliveryFee: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 font-bold"
-                />
+            {/* Delivery Fees & Free Delivery Threshold Config */}
+            <div className="p-4 rounded-2xl bg-linear-to-r from-[#FFE29A]/30 to-[#FFF8EF] border border-[#F5A16C]/30 space-y-4">
+              <div className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-[#DE7E42]" />
+                <h4 className="text-sm font-black text-[#57382E]">
+                  Spese di Consegna & Spedizione Gratuita
+                </h4>
               </div>
 
-              <div>
-                <label className="font-bold text-[#57382E] block mb-1">Minimo d'Ordine Consegna (€)</label>
-                <input
-                  type="number"
-                  step="1"
-                  value={settings.minOrderDelivery}
-                  onChange={e => setSettings({ ...settings, minOrderDelivery: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 font-bold"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white p-3.5 rounded-xl border border-[#F5A16C]/25 shadow-xs">
+                  <label className="font-bold text-[#57382E] block mb-1 text-xs">
+                    Costo Base di Consegna (€)
+                  </label>
+                  <p className="text-[10px] text-[#7E5649] mb-2">Importo addebitato per la consegna a domicilio.</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-[#57382E]">€</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={settings.deliveryFee}
+                      onChange={e => setSettings({ ...settings, deliveryFee: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#FFF8EF] border border-[#F5A16C]/30 font-black text-sm text-[#DE7E42]"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-white p-3.5 rounded-xl border border-[#F5A16C]/25 shadow-xs">
+                  <label className="font-bold text-[#57382E] block mb-1 text-xs">
+                    Consegna GRATIS a partire da (€)
+                  </label>
+                  <p className="text-[10px] text-[#7E5649] mb-2">Oltre questo totale di spesa, il cliente NON paga la consegna.</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-[#57382E]">€</span>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={settings.freeDeliveryThreshold}
+                      onChange={e => setSettings({ ...settings, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#FFF8EF] border border-[#F5A16C]/30 font-black text-sm text-emerald-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-white p-3.5 rounded-xl border border-[#F5A16C]/25 shadow-xs">
+                  <label className="font-bold text-[#57382E] block mb-1 text-xs">
+                    Minimo d'Ordine (€)
+                  </label>
+                  <p className="text-[10px] text-[#7E5649] mb-2">Carrello minimo per poter ordinare a domicilio.</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-[#57382E]">€</span>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={settings.minOrderDelivery}
+                      onChange={e => setSettings({ ...settings, minOrderDelivery: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#FFF8EF] border border-[#F5A16C]/30 font-black text-sm text-[#57382E]"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="font-bold text-[#57382E] block mb-1">Spedizione Gratuita da (€)</label>
-                <input
-                  type="number"
-                  step="1"
-                  value={settings.freeDeliveryThreshold}
-                  onChange={e => setSettings({ ...settings, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 font-bold"
-                />
+              {/* Dynamic Customer Preview Banner */}
+              <div className="p-3 bg-white rounded-xl border border-[#F5A16C]/30 text-xs flex items-center gap-2 text-[#57382E]">
+                <span className="text-base">💡</span>
+                <span>
+                  <strong>Regola attiva:</strong> Il cliente paga <strong>€{settings.deliveryFee.toFixed(2)}</strong> per la consegna. Se il carrello raggiunge o supera <strong>€{settings.freeDeliveryThreshold.toFixed(2)}</strong>, le spese di consegna diventano <strong>0.00 € (GRATIS)</strong>!
+                </span>
               </div>
             </div>
 
@@ -329,6 +368,115 @@ export default function AdminImpostazioniPage() {
                 </p>
               </div>
             </label>
+          </div>
+        </div>
+
+        {/* 4. Aggiunte & Personalizzazioni Predefinite del Negozio */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#F5A16C]/25 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-black text-[#57382E] flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#DE7E42]" />
+                <span>Aggiunte & Personalizzazioni Predefinite del Negozio</span>
+              </h3>
+              <p className="text-xs text-[#7E5649]">
+                Queste opzioni (es. Confezione regalo, Scritta personalizzata, Biglietto) vengono proposte per tutti i prodotti del catalogo, a meno che il singolo prodotto non ne abbia di personalizzate.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const current = settings.defaultAddons || [];
+                setSettings({
+                  ...settings,
+                  defaultAddons: [
+                    ...current,
+                    {
+                      id: `addon-${Date.now()}`,
+                      name: 'Nuova Aggiunta',
+                      price: 2.00,
+                      allowsCustomText: false,
+                    },
+                  ],
+                });
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-[#57382E] hover:bg-[#7E5649] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Aggiungi Opzione Globale</span>
+            </button>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            {(settings.defaultAddons || []).length === 0 ? (
+              <p className="text-xs text-[#9E7D73] italic p-3 bg-[#FFF8EF] rounded-xl border border-dashed border-[#F5A16C]/30 text-center">
+                Nessuna aggiunta predefinita configurata. Clicca su "Aggiungi Opzione Globale" per crearne una.
+              </p>
+            ) : (
+              (settings.defaultAddons || []).map((addon, aIdx) => (
+                <div
+                  key={addon.id}
+                  className="p-3 bg-[#FFF8EF] rounded-2xl border border-[#F5A16C]/30 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs"
+                >
+                  <div className="flex-1 w-full sm:w-auto">
+                    <input
+                      type="text"
+                      required
+                      value={addon.name}
+                      onChange={e => {
+                        const updated = [...(settings.defaultAddons || [])];
+                        updated[aIdx] = { ...updated[aIdx], name: e.target.value };
+                        setSettings({ ...settings, defaultAddons: updated });
+                      }}
+                      placeholder="Nome dell'aggiunta (es. Confezione regalo con nastro)"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white border border-[#F5A16C]/30 font-bold text-[#57382E]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-[#57382E]">€</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        required
+                        value={addon.price}
+                        onChange={e => {
+                          const updated = [...(settings.defaultAddons || [])];
+                          updated[aIdx] = { ...updated[aIdx], price: parseFloat(e.target.value) || 0 };
+                          setSettings({ ...settings, defaultAddons: updated });
+                        }}
+                        className="w-20 px-2 py-1.5 rounded-xl bg-white border border-[#F5A16C]/30 font-black text-[#DE7E42]"
+                      />
+                    </div>
+                    <label className="flex items-center gap-1 text-[11px] font-bold text-[#57382E] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(addon.allowsCustomText)}
+                        onChange={e => {
+                          const updated = [...(settings.defaultAddons || [])];
+                          updated[aIdx] = { ...updated[aIdx], allowsCustomText: e.target.checked };
+                          setSettings({ ...settings, defaultAddons: updated });
+                        }}
+                        className="rounded text-[#DE7E42]"
+                      />
+                      <span>Chiedi testo cliente</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = (settings.defaultAddons || []).filter((_, i) => i !== aIdx);
+                        setSettings({ ...settings, defaultAddons: updated });
+                      }}
+                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50"
+                      title="Elimina opzione"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

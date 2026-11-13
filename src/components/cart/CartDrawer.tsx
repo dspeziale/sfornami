@@ -87,6 +87,35 @@ export const CartDrawer: React.FC = () => {
             </button>
           </div>
 
+          {/* Free Delivery Motivational Progress Bar */}
+          {items.length > 0 && (
+            <div className="bg-[#FFF8EF] border-b border-[#F5A16C]/30 px-5 py-3">
+              {subtotal >= settings.freeDeliveryThreshold ? (
+                <div className="flex items-center gap-2 text-xs font-black text-emerald-800 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl shadow-xs">
+                  <span className="text-base">🎉</span>
+                  <span>Complimenti! Hai ottenuto la <strong>CONSEGNA GRATUITA</strong> a Roma!</span>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-[#57382E]">
+                      Mancano <strong className="text-[#DE7E42]">€{(settings.freeDeliveryThreshold - subtotal).toFixed(2)}</strong> per la Consegna Gratis!
+                    </span>
+                    <span className="text-[11px] text-[#7E5649] font-bold">
+                      €{subtotal.toFixed(2)} / €{settings.freeDeliveryThreshold.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+                    <div
+                      className="h-full bg-linear-to-r from-[#F5A16C] to-[#DE7E42] transition-all duration-300"
+                      style={{ width: `${Math.min(100, Math.max(5, (subtotal / settings.freeDeliveryThreshold) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Items List */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
             {items.length === 0 ? (
@@ -107,7 +136,8 @@ export const CartDrawer: React.FC = () => {
               <>
                 <div className="space-y-3">
                   {items.map(item => {
-                    const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0);
+                    const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+                    const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
                     const itemTotal = unitPrice * item.quantity;
 
                     return (
@@ -132,6 +162,23 @@ export const CartDrawer: React.FC = () => {
                               Variante: {item.selectedVariant.name}
                             </p>
                           )}
+
+                          {/* Selected Addons Display */}
+                          {item.selectedAddons && item.selectedAddons.length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {item.selectedAddons.map((addon, aIdx) => (
+                                <div key={aIdx} className="text-[11px] text-[#DE7E42] font-semibold flex items-center gap-1">
+                                  <span>+ {addon.name} (+€{Number(addon.price).toFixed(2)})</span>
+                                  {addon.customText && (
+                                    <span className="text-[#57382E] italic truncate max-w-[140px]">
+                                      "{addon.customText}"
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           <p className="text-xs text-[#7E5649] font-semibold mt-0.5">
                             €{unitPrice.toFixed(2)} {item.product.unit && `• ${item.product.unit}`}
                           </p>
@@ -243,7 +290,7 @@ export const CartDrawer: React.FC = () => {
                   <span className="text-lg text-[#DE7E42]">€{total.toFixed(2)}</span>
                 </div>
                 <p className="text-[10px] text-[#9E7D73]">
-                  * Eventuali spese di consegna (€3.50) calcolate al checkout. Gratuite sopra €40.
+                  * Spese di consegna: €{settings.deliveryFee.toFixed(2)} (GRATIS per ordini da €{settings.freeDeliveryThreshold.toFixed(2)} in su).
                 </p>
               </div>
 
