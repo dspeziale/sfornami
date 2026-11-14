@@ -47,7 +47,7 @@ export default function PrivacyPage() {
             I dati sono trattati esclusivamente per:
           </p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Esecuzione del contratto di acquisto e fornitura dei prodotti di panetteria e pasticceria (Art. 6.1.b GDPR).</li>
+            <li>Esecuzione del contratto di acquisto e fornitura dei prodotti di pasticceria e dolci artigianali (Art. 6.1.b GDPR).</li>
             <li>Adempimento di obblighi legali e fiscali (Art. 6.1.c GDPR).</li>
             <li>Invio di comunicazioni transazionali sull'ordine (es. notifica di ordine pronto per il ritiro).</li>
             <li>Invio di newsletter e promozioni speciali solo previo espresso e separato consenso facoltativo dell'utente.</li>

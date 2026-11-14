@@ -259,9 +259,8 @@ export const CartDrawer: React.FC = () => {
                   )}
                   {promoFeedback && (
                     <p
-                      className={`text-[11px] mt-1 font-medium ${
-                        promoFeedback.success ? 'text-emerald-700' : 'text-red-600'
-                      }`}
+                      className={`text-[11px] mt-1 font-medium ${promoFeedback.success ? 'text-emerald-700' : 'text-red-600'
+                        }`}
                     >
                       {promoFeedback.message}
                     </p>

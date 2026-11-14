@@ -115,13 +115,13 @@ function HomeCatalogContent() {
       <div className="flex items-center justify-between gap-3 pt-1">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-[#57382E] tracking-tight flex items-center gap-2">
-            <span>Il Nostro Forno</span>
+            <span>La Nostra Pasticceria</span>
             <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-[#FFE29A] text-[#57382E] text-[10px] font-bold uppercase">
               Torraccia • Roma
             </span>
           </h1>
           <p className="text-[11px] sm:text-xs text-[#7E5649]">
-            Sfornato fresco ogni giorno • Solo consegna a domicilio
+            Dolci artigianali sfornati freschi ogni giorno • Consegna a domicilio a Roma
           </p>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] font-bold shrink-0">
@@ -161,7 +161,7 @@ function HomeCatalogContent() {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Cerca pane, pizza, dolci..."
+            placeholder="Cerca torte, crostate, ciambelloni, biscotti..."
             className="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-[#F5A16C]/30 text-xs text-[#57382E] placeholder:text-[#9E7D73] focus:outline-hidden focus:border-[#F28BA6]"
           />
           {searchQuery && (

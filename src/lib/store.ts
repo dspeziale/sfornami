@@ -118,11 +118,21 @@ const INITIAL_DEMO_CAKE_REQUESTS: CustomCakeRequest[] = [
   },
 ];
 
+// Helper to guarantee only pastry / dessert categories
+function normalizeProduct(p: Product): Product {
+  if (p.category === 'panetteria') {
+    return { ...p, category: 'pasticceria' };
+  }
+  return p;
+}
+
 export const DataService = {
   // Synchronous cache accessor for instant mobile rendering
   getCachedProducts(): Product[] | null {
     if (typeof window === 'undefined') return null;
-    return getLocalItem<Product[] | null>(STORAGE_KEYS.PRODUCTS, null);
+    const items = getLocalItem<Product[] | null>(STORAGE_KEYS.PRODUCTS, null);
+    if (!items) return null;
+    return items.map(normalizeProduct);
   },
 
   // --- PRODUCTS ---
@@ -132,9 +142,11 @@ export const DataService = {
       try {
         const res = await fetch('/api/products', { cache: 'no-store' });
         if (res.ok) {
-          const serverProducts = (await res.json()) as Product[];
-          if (Array.isArray(serverProducts)) {
-            const localProducts = getLocalItem<Product[] | null>(STORAGE_KEYS.PRODUCTS, null);
+          const rawServerProducts = (await res.json()) as Product[];
+          if (Array.isArray(rawServerProducts)) {
+            const serverProducts = rawServerProducts.map(normalizeProduct);
+            const rawLocal = getLocalItem<Product[] | null>(STORAGE_KEYS.PRODUCTS, null);
+            const localProducts = rawLocal ? rawLocal.map(normalizeProduct) : null;
 
             // Auto-Migration check:
             // If the client has modified products in localStorage, but the server is still on the default demo catalog,
@@ -173,14 +185,15 @@ export const DataService = {
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) return data as Product[];
+        if (!error && data && data.length > 0) return (data as Product[]).map(normalizeProduct);
       } catch (e) {
         console.warn('Supabase fetch failed, falling back to local storage', e);
       }
     }
 
     // 3. Fallback to localStorage or default
-    return getLocalItem<Product[]>(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+    const fallback = getLocalItem<Product[]>(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+    return fallback.map(normalizeProduct);
   },
 
   async getProductBySlug(slug: string): Promise<Product | null> {

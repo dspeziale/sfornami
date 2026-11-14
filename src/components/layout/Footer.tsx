@@ -71,7 +71,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             <Logo variant="main" size="md" className="brightness-125" />
             <p className="text-sm text-[#FFF8EF]/80 leading-relaxed max-w-sm">
-              SFORNAMÌ è il laboratorio artigianale di panetteria e pasticceria a Roma. Operiamo esclusivamente con ordini online e comoda consegna a domicilio in tutta la città.
+              SFORNAMÌ è il laboratorio artigianale di pasticceria e torte a Roma. Operiamo esclusivamente con ordini online e comoda consegna a domicilio in tutta la città.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
@@ -107,27 +107,27 @@ export const Footer: React.FC = () => {
           {/* Navigazione */}
           <div className="space-y-3">
             <h5 className="font-bold text-sm uppercase tracking-wider text-[#FFE29A]">
-              Bontà da Forno
+              Dolci Artigianali
             </h5>
             <ul className="space-y-2 text-xs text-[#FFF8EF]/80">
               <li>
-                <Link href="/?cat=panetteria" className="hover:text-[#FFE29A] transition-colors">
-                  Pane a lievito madre
+                <Link href="/?cat=pasticceria" className="hover:text-[#FFE29A] transition-colors">
+                  Ciambelloni e Plumcake
                 </Link>
               </li>
               <li>
-                <Link href="/?cat=panetteria" className="hover:text-[#FFE29A] transition-colors">
-                  Pizza e focacce alla pala
+                <Link href="/?cat=torte-ordinazione" className="hover:text-[#FFE29A] transition-colors">
+                  Torte artigianali e crostate
                 </Link>
               </li>
               <li>
                 <Link href="/?cat=pasticceria" className="hover:text-[#FFE29A] transition-colors">
-                  Maritozzi romani
+                  Biscotti e Cookies
                 </Link>
               </li>
               <li>
                 <Link href="/?cat=pasticceria" className="hover:text-[#FFE29A] transition-colors">
-                  Crostate e biscotti
+                  Tiramisù & dolci al cucchiaio
                 </Link>
               </li>
               <li>

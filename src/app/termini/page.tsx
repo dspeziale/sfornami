@@ -21,7 +21,7 @@ export default function TerminiPage() {
         <section className="space-y-2">
           <h2 className="text-base font-black text-[#57382E]">1. Oggetto del Servizio</h2>
           <p>
-            Le presenti condizioni regolano l'acquisto e la prenotazione di prodotti da forno, pane, focacce, dolci e torte artigianali preparati freschi dal laboratorio <strong>{INITIAL_STORE_SETTINGS.storeName}</strong> a Roma.
+            Le presenti condizioni regolano l'acquisto e la prenotazione di prodotti dolciari, torte personalizzate, ciambelloni, biscotti e creazioni artigianali preparati freschi dal laboratorio <strong>{INITIAL_STORE_SETTINGS.storeName}</strong> a Roma.
           </p>
         </section>
 

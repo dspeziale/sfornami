@@ -222,6 +222,10 @@ export async function initPostgresTables(): Promise<void> {
       await p.query('INSERT INTO time_slots (id, data) VALUES ($1, $2)', ['default', JSON.stringify(INITIAL_TIME_SLOTS)]);
     }
 
+    // Auto-migration: ensure only sweet / pastry categories exist in PostgreSQL
+    await p.query("UPDATE products SET category = 'pasticceria' WHERE category = 'panetteria'");
+    await p.query("DELETE FROM products WHERE id IN ('prod-pane-casereccio', 'prod-pizza-bianca-romana', 'prod-pane-integrale-semi', 'prod-focaccia-pomodorini', 'prod-grissini-stirato-evo')");
+
     tablesInitialized = true;
     console.log('✅ PostgreSQL SFORNAMÌ: Tabelle e indici pronti!');
   } catch (err) {
@@ -235,7 +239,7 @@ function rowToProduct(row: any): Product {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    category: row.category,
+    category: row.category === 'panetteria' ? 'pasticceria' : row.category,
     subCategory: row.sub_category || undefined,
     description: row.description || '',
     ingredients: row.ingredients || '',

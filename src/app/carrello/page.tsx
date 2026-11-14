@@ -69,7 +69,7 @@ export default function CarrelloPage() {
           <div className="text-6xl animate-bounce">🥐</div>
           <h3 className="text-xl font-black text-[#57382E]">Il tuo carrello è vuoto</h3>
           <p className="text-xs text-[#7E5649]">
-            Aggiungi pane caldo, pizza scrocchiarella, maritozzi o biscotti artigianali prima di procedere.
+            Aggiungi le nostre torte fresche, crostate, ciambelloni o biscotti artigianali prima di procedere.
           </p>
           <Link
             href="/"

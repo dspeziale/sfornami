@@ -40,7 +40,7 @@ export default function AdminProdottiPage() {
   // Form Fields
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
-  const [formCategory, setFormCategory] = useState<ProductCategory>('panetteria');
+  const [formCategory, setFormCategory] = useState<ProductCategory>('pasticceria');
   const [formSubCategory, setFormSubCategory] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formIngredients, setFormIngredients] = useState('');
@@ -236,11 +236,11 @@ export default function AdminProdottiPage() {
     setEditingProduct(null);
     setFormName('');
     setFormSlug('');
-    setFormCategory('panetteria');
+    setFormCategory('pasticceria');
     setFormSubCategory('');
     setFormDescription('');
-    setFormIngredients('Farina di grano tipo 1, acqua, lievito madre naturale, sale.');
-    setFormAllergens(['glutine']);
+    setFormIngredients('Farina di grano tipo 00, zucchero semolato, uova fresche, burro, lievito per dolci, vaniglia naturale.');
+    setFormAllergens(['glutine', 'uova', 'latte']);
     setFormPrice(3.50);
     setFormUnit('Al pezzo');
     setFormWeight('500g');
@@ -642,7 +642,7 @@ export default function AdminProdottiPage() {
                     type="text"
                     value={formUnit}
                     onChange={e => setFormUnit(e.target.value)}
-                    placeholder="Al pezzo, Pagnotta 800g..."
+                    placeholder="Al pezzo, Torta intera, Vaschetta 500g..."
                     className="w-full px-3 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30"
                   />
                 </div>

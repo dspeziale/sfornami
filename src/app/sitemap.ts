@@ -6,7 +6,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const routes = [
     '',
-    '/panetteria',
     '/pasticceria',
     '/menu',
     '/torte-personalizzate',
@@ -22,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}${route}`,
     lastModified,
     changeFrequency: route === '' || route === '/menu' ? 'daily' : 'weekly',
-    priority: route === '' ? 1.0 : route.startsWith('/torte') || route.startsWith('/panetteria') ? 0.9 : 0.7,
+    priority: route === '' ? 1.0 : route.startsWith('/torte') ? 0.9 : 0.7,
   }));
 }
 

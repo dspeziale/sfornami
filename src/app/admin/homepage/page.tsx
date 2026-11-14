@@ -519,7 +519,7 @@ export default function AdminHomepagePage() {
                     <input
                       type="text"
                       value={cat.link}
-                      placeholder="/menu o /panetteria"
+                      placeholder="/?cat=pasticceria o /torte-personalizzate"
                       onChange={e => {
                         const updated = [...content.categoriesCards];
                         updated[idx].link = e.target.value;

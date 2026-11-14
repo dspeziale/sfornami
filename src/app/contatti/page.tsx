@@ -47,7 +47,7 @@ export default function ContattiPage() {
           Contatta il Nostro Laboratorio
         </h1>
         <p className="text-sm sm:text-base text-[#7E5649] leading-relaxed">
-          Siamo nel quartiere <strong>Torraccia (00156 Roma)</strong>. Prepariamo ogni giorno pane a lievito madre, pizze, maritozzi, torte e biscotti artigianali con comoda consegna a domicilio in tutta la città.
+          Siamo nel quartiere <strong>Torraccia (00156 Roma)</strong>. Prepariamo ogni giorno ciambelloni, torte su ordinazione, biscotti e delizie artigianali con comoda consegna a domicilio in tutta la città.
         </p>
       </div>
 

@@ -25,37 +25,46 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'SFORNAMÌ | Laboratorio Artigianale di Panetteria e Pasticceria a Roma',
+  title: 'SFORNAMÌ | Pasticceria Artigianale & Torte a Roma',
   description:
-    'Il buono fatto a mano, con un pizzico di felicità. Pane a lievito madre naturale, pizza bianca alla pala, maritozzi con panna montata fresca e torte su ordinazione a Roma.',
+    'Il buono fatto a mano, con un pizzico di felicità. Ciambelloni, torte artigianali su ordinazione, crostate, biscotti della nonna e dolci appena sfornati con consegna a domicilio a Roma.',
   keywords: [
-    'panetteria artigianale Roma',
     'pasticceria artigianale Roma',
     'torte personalizzate Roma',
-    'pane lievito madre Roma',
-    'maritozzo con panna Roma',
-    'pizza bianca romana alla pala',
-    'crostata visciole Roma',
+    'torte compleanno Roma',
+    'ciambellone artigianale Roma',
+    'crostata artigianale Roma',
     'dolci fatti in casa Roma',
+    'biscotti artigianali Roma',
+    'pasticceria consegna a domicilio Roma',
   ],
   authors: [{ name: 'SFORNAMÌ Roma' }],
-  metadataBase: new URL('https://sfornami.it'),
+  metadataBase: new URL('https://sfornami.dsc-italy.app'),
   openGraph: {
-    title: 'SFORNAMÌ | Il buono fatto a mano, con un pizzico di felicità.',
+    title: 'SFORNAMÌ | Pasticceria Artigianale & Torte a Roma',
     description:
-      'Laboratorio artigianale di panetteria e pasticceria a Roma. Ordini online freschi di giornata con consegna a domicilio su tutta Roma.',
-    url: 'https://sfornami.it',
-    siteName: 'SFORNAMÌ',
+      'Dolci artigianali, ciambelloni, torte fresche e biscotti preparati a mano a Roma (Torraccia). Ordina online con consegna a domicilio!',
+    url: 'https://sfornami.dsc-italy.app',
+    siteName: 'SFORNAMÌ Roma',
     locale: 'it_IT',
     type: 'website',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=85',
+        url: 'https://sfornami.dsc-italy.app/og-image.jpg',
+        secureUrl: 'https://sfornami.dsc-italy.app/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'SFORNAMÌ - Panetteria e Pasticceria Artigianale Roma',
+        alt: 'SFORNAMÌ - Pasticceria Artigianale e Torte a Roma',
+        type: 'image/jpeg',
       },
     ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SFORNAMÌ | Pasticceria Artigianale & Torte a Roma',
+    description:
+      'Dolci artigianali, ciambelloni, torte fresche e biscotti preparati a mano a Roma (Torraccia). Ordina online con consegna a domicilio!',
+    images: ['https://sfornami.dsc-italy.app/og-image.jpg'],
   },
   icons: {
     icon: '/icon.svg',
@@ -74,8 +83,8 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Bakery',
     name: INITIAL_STORE_SETTINGS.storeName,
-    description: 'Laboratorio artigianale di panetteria e pasticceria a Roma.',
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff',
+    description: 'Laboratorio artigianale di pasticceria e torte a Roma.',
+    image: 'https://sfornami.dsc-italy.app/og-image.jpg',
     telephone: INITIAL_STORE_SETTINGS.phone,
     email: INITIAL_STORE_SETTINGS.email,
     address: {
@@ -111,6 +120,16 @@ export default function RootLayout({
   return (
     <html lang="it" className={`${outfit.variable} ${plusJakarta.variable}`}>
       <head>
+        {/* WhatsApp & Social Media Open Graph explicit tags */}
+        <meta property="og:title" content="SFORNAMÌ | Pasticceria Artigianale & Torte a Roma" />
+        <meta property="og:description" content="Dolci artigianali, ciambelloni, torte fresche e biscotti preparati a mano a Roma. Ordina online con consegna a domicilio!" />
+        <meta property="og:image" content="https://sfornami.dsc-italy.app/og-image.jpg" />
+        <meta property="og:image:secure_url" content="https://sfornami.dsc-italy.app/og-image.jpg" />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="SFORNAMÌ Pasticceria Artigianale Roma" />
+        <link rel="image_src" href="https://sfornami.dsc-italy.app/og-image.jpg" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(bakerySchema) }}

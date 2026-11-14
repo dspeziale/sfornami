@@ -482,7 +482,7 @@ export default function CheckoutPage() {
               <div className="text-xs">
                 <p className="font-bold text-[#57382E]">Laboratorio Artigianale con Consegna Diretta</p>
                 <p className="text-[#7E5649]">
-                  Prepariamo il pane e i dolci freschi nel nostro laboratorio e li consegniamo fragranti all'indirizzo indicato.
+                  Prepariamo le torte e i dolci freschi nel nostro laboratorio e li consegniamo fragranti all'indirizzo indicato.
                 </p>
               </div>
             </div>
@@ -573,7 +573,7 @@ export default function CheckoutPage() {
                 rows={2}
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                placeholder="Es. Citofonare De Angelis int. 4, pane con mollica ben cotta..."
+                placeholder="Es. Citofonare De Angelis int. 4, indicazioni per la consegna o orari..."
                 className="w-full px-3.5 py-2 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs text-[#57382E]"
               />
             </div>

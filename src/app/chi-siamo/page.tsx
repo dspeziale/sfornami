@@ -26,7 +26,7 @@ export default function ChiSiamoPage() {
             L'Amore per le Ricette di Casa e la Farina Vera
           </h2>
           <p>
-            <strong>SFORNAMÌ</strong> nasce da una passione autentica per l'arte bianca e la pasticceria fatta in casa: il profumo del burro che fonde al mattino presto, la crosta del pane che "canta" appena uscita dal forno a legna, e il rito sacro della domenica con i dolci di famiglia.
+            <strong>SFORNAMÌ</strong> nasce da una passione autentica per la pasticceria artigianale e i dolci fatti in casa: il profumo del burro e della vaniglia al mattino presto, la frolla dorata che cuoce nel forno, e il rito sacro della domenica con i dolci di famiglia.
           </p>
           <p>
             Nel nostro laboratorio artigianale nel quartiere Torraccia a Roma (00156), ogni impasto inizia con rispetto: selezioniamo grani antichi e farine 100% italiane macinate a pietra, ricche di crusca nobile e germe di grano vivo. Non utilizziamo additivi chimici né grassi idrogenati: soltanto uova fresche di galline allevate all’aperto, latte fresco intero, burro di fattoria e frutta di stagione. Confezioniamo ogni ordine appena sfornato e lo consegniamo direttamente a domicilio.
@@ -66,12 +66,12 @@ export default function ChiSiamoPage() {
             </div>
             <div className="relative rounded-3xl overflow-hidden aspect-square shadow-lg group">
               <img
-                src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80"
-                alt="Il pane appena sfornato"
+                src="https://sfornami.dsc-italy.app/og-image.jpg"
+                alt="I nostri dolci artigianali"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs">
-                Pane caldo su pietra
+                Ciambelloni e torte
               </span>
             </div>
           </div>

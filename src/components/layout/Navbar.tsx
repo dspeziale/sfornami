@@ -15,14 +15,14 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Catalogo & Ordini', href: '/' },
+    { name: 'Catalogo Dolci', href: '/' },
     { name: 'Il nostro laboratorio', href: '/chi-siamo' },
     { name: 'Torte su ordinazione', href: '/torte-personalizzate', highlight: true },
     { name: 'Contatti', href: '/contatti' },
   ];
 
   const waLink = getWhatsAppLink(
-    'Ciao SFORNAMÌ! Vorrei informazioni sulle vostre bontà artigianali e ordinare con consegna a domicilio.'
+    'Ciao SFORNAMÌ! Vorrei informazioni sulle vostre torte e dolci artigianali e ordinare con consegna a domicilio.'
   );
 
   return (
@@ -36,7 +36,7 @@ export const Navbar: React.FC = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DE7E42]"></span>
             </span>
             <div className="text-[11px] sm:text-xs leading-tight">
-              <span>🥖 Laboratorio artigianale di panetteria a Roma</span>
+              <span>🧁 Laboratorio artigianale di pasticceria & torte a Roma</span>
               <div className="font-bold text-[#DE7E42] sm:inline sm:before:content-['•_']">
                 Solo ordini online con consegna a domicilio
                 {settings?.freeDeliveryThreshold && (
@@ -77,11 +77,10 @@ export const Navbar: React.FC = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-xl text-sm font-bold transition-all relative ${
-                    isActive
+                  className={`px-3 py-2 rounded-xl text-sm font-bold transition-all relative ${isActive
                       ? 'text-[#57382E] bg-[#FFE29A]/60 shadow-xs'
                       : 'text-[#7E5649] hover:text-[#57382E] hover:bg-white/60'
-                  } ${link.highlight ? 'text-[#DE7E42]' : ''}`}
+                    } ${link.highlight ? 'text-[#DE7E42]' : ''}`}
                 >
                   <span className="flex items-center gap-1.5">
                     {link.highlight && <Sparkles className="w-3.5 h-3.5 text-[#F28BA6]" />}
@@ -150,11 +149,10 @@ export const Navbar: React.FC = () => {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center justify-between px-4 py-3 rounded-2xl text-base font-bold transition-colors ${
-                      isActive
+                    className={`flex items-center justify-between px-4 py-3 rounded-2xl text-base font-bold transition-colors ${isActive
                         ? 'bg-[#FFE29A] text-[#57382E]'
                         : 'text-[#7E5649] hover:bg-white'
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center gap-2">
                       {link.highlight && <Sparkles className="w-4 h-4 text-[#F28BA6]" />}

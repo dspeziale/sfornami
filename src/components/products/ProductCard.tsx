@@ -76,7 +76,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#DE7E42]">
-                {product.subCategory || product.category}
+                {product.subCategory || (product.category === 'torte-ordinazione' ? 'Torte su ordinazione' : 'Pasticceria')}
               </span>
               {allergenIcons.length > 0 && (
                 <div className="flex gap-1" title="Allergeni presenti">
