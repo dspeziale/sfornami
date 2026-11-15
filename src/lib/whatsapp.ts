@@ -49,7 +49,7 @@ export function generateWhatsAppOrderMessage({
 }): string {
   const lines: string[] = [];
 
-  lines.push('🥖 *NUOVO ORDINE SFORNAMÌ* 🥐');
+  lines.push('🍰 *NUOVO ORDINE SFORNAMÌ* 🎂');
   lines.push('--------------------------------');
   if (orderNumber) {
     lines.push(`📋 *Codice Ordine:* ${orderNumber}`);
@@ -146,6 +146,12 @@ export function generateWhatsAppCustomCakeMessage({
   lines.push(`🎨 *Decorazione desiderata:* ${cakeRequest.decoration}`);
   if (cakeRequest.customText) {
     lines.push(`✍️ *Scritta sulla torta:* "${cakeRequest.customText}"`);
+  }
+  if (cakeRequest.selectedExtras && cakeRequest.selectedExtras.length > 0) {
+    lines.push(`🎁 *Extra selezionati:* ${cakeRequest.selectedExtras.join(', ')}`);
+  }
+  if (cakeRequest.estimatedPrice) {
+    lines.push(`💰 *Preventivo stimato dal sito:* €${cakeRequest.estimatedPrice.toFixed(2)}`);
   }
   lines.push(`📅 *Data richiesta:* ${cakeRequest.requestedDate}`);
   lines.push(`⏰ *Orario:* ${cakeRequest.requestedTime}`);

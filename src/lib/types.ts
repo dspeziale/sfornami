@@ -136,6 +136,8 @@ export interface CustomCakeRequest {
   filling: string;
   decoration: string;
   customText?: string;
+  selectedExtras?: string[];
+  estimatedPrice?: number;
   requestedDate: string;
   requestedTime: string;
   referenceImageUrl?: string;
@@ -143,6 +145,42 @@ export interface CustomCakeRequest {
   status: 'in_valutazione' | 'preventivo_inviato' | 'confermata' | 'rifiutata';
   quoteAmount?: number;
   createdAt: string;
+}
+
+export interface CakeOptionItem {
+  id: string;
+  name: string;
+  description?: string;
+  priceModifier?: number;
+  imageUrl?: string;
+  isPopular?: boolean;
+  isActive: boolean;
+}
+
+export interface CakeExtraAddon {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface CustomCakeConfig {
+  introTitle: string;
+  introSubtitle: string;
+  bannerBadge: string;
+  basePricePerServing: number;
+  servingWeightKg: number;
+  minHoursNotice: number;
+  allowPhotoUpload: boolean;
+  allowCustomDedication: boolean;
+  customDedicationPrice: number;
+  servingsOptions: number[];
+  cakeTypes: CakeOptionItem[];
+  flavorBases: CakeOptionItem[];
+  fillings: CakeOptionItem[];
+  decorations: CakeOptionItem[];
+  extraAddons: CakeExtraAddon[];
 }
 
 export interface TimeSlot {

@@ -1,5 +1,5 @@
-import { CustomCakeRequest, HomePageContent, Order, OrderStatus, Product, StoreSettings, TimeSlot } from './types';
-import { INITIAL_HOMEPAGE_CONTENT, INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS } from './initialData';
+import { CustomCakeConfig, CustomCakeRequest, HomePageContent, Order, OrderStatus, Product, StoreSettings, TimeSlot } from './types';
+import { INITIAL_CUSTOM_CAKE_CONFIG, INITIAL_HOMEPAGE_CONTENT, INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS } from './initialData';
 import { supabase, isSupabaseConfigured } from './supabase';
 
 const STORAGE_KEYS = {
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'sfornami_settings_v1',
   TIME_SLOTS: 'sfornami_time_slots_v1',
   HOMEPAGE: 'sfornami_homepage_v1',
+  CAKE_CONFIG: 'sfornami_cake_config_v1',
   LAST_SYNC: 'sfornami_last_sync_v1',
 };
 
@@ -470,6 +471,43 @@ export const DataService = {
       if (quoteAmount !== undefined) req.quoteAmount = quoteAmount;
       setLocalItem(STORAGE_KEYS.CAKE_REQUESTS, requests);
     }
+  },
+
+  // --- CUSTOM CAKE CONFIGURATION ---
+  async getCustomCakeConfig(): Promise<CustomCakeConfig> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/cake-config', { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as CustomCakeConfig;
+          if (data && data.cakeTypes && data.cakeTypes.length > 0) {
+            setLocalItem(STORAGE_KEYS.CAKE_CONFIG, data);
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/cake-config:', e);
+      }
+    }
+    return getLocalItem<CustomCakeConfig>(STORAGE_KEYS.CAKE_CONFIG, INITIAL_CUSTOM_CAKE_CONFIG);
+  },
+
+  async saveCustomCakeConfig(config: CustomCakeConfig): Promise<CustomCakeConfig> {
+    setLocalItem(STORAGE_KEYS.CAKE_CONFIG, config);
+
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/cake-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config),
+        });
+      } catch (e) {
+        console.warn('Failed to save /api/cake-config:', e);
+      }
+      window.dispatchEvent(new CustomEvent('sfornami_cake_config_updated', { detail: config }));
+    }
+    return config;
   },
 
   // --- SETTINGS ---

@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
-import { Product, StoreSettings, Order, CustomCakeRequest, TimeSlot, HomePageContent } from './types';
-import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS, INITIAL_HOMEPAGE_CONTENT } from './initialData';
+import { Product, StoreSettings, Order, CustomCakeRequest, TimeSlot, HomePageContent, CustomCakeConfig } from './types';
+import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS, INITIAL_HOMEPAGE_CONTENT, INITIAL_CUSTOM_CAKE_CONFIG } from './initialData';
 
 const DEFAULT_POSTGRES_URL = 'postgres://postgres:BxLsgENC7nadiJzQR0CbMgjDUmXbHCv5SPmHa1DocKowR89gb2Yz0qOOtNPeRQGR@82klm8m6jknbyuzjm8wgoc2p:5432/postgres';
 
@@ -220,6 +220,28 @@ export async function initPostgresTables(): Promise<void> {
     const tsRes = await p.query('SELECT COUNT(*) FROM time_slots WHERE id = $1', ['default']);
     if (parseInt(tsRes.rows[0].count, 10) === 0) {
       await p.query('INSERT INTO time_slots (id, data) VALUES ($1, $2)', ['default', JSON.stringify(INITIAL_TIME_SLOTS)]);
+    }
+
+    // 9. Custom Cake Config table
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS custom_cake_config (
+        id TEXT PRIMARY KEY,
+        data JSONB,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Ensure columns exist on custom_cake_requests
+    await p.query(`
+      ALTER TABLE custom_cake_requests
+      ADD COLUMN IF NOT EXISTS selected_extras JSONB,
+      ADD COLUMN IF NOT EXISTS estimated_price NUMERIC;
+    `);
+
+    // SEED: Custom Cake Config if empty
+    const cakeConfigRes = await p.query('SELECT COUNT(*) FROM custom_cake_config WHERE id = $1', ['default']);
+    if (parseInt(cakeConfigRes.rows[0].count, 10) === 0) {
+      await p.query('INSERT INTO custom_cake_config (id, data) VALUES ($1, $2)', ['default', JSON.stringify(INITIAL_CUSTOM_CAKE_CONFIG)]);
     }
 
     // Auto-migration: ensure only sweet / pastry categories exist in PostgreSQL
@@ -537,6 +559,8 @@ export const PostgresService = {
       filling: row.filling,
       decoration: row.decoration,
       customText: row.custom_text || undefined,
+      selectedExtras: typeof row.selected_extras === 'string' ? JSON.parse(row.selected_extras) : (row.selected_extras || undefined),
+      estimatedPrice: row.estimated_price ? parseFloat(row.estimated_price) : undefined,
       requestedDate: row.requested_date,
       requestedTime: row.requested_time,
       referenceImageUrl: row.reference_photo_url || undefined,
@@ -553,9 +577,9 @@ export const PostgresService = {
     await p.query(
       `INSERT INTO custom_cake_requests (
         id, customer_name, customer_phone, customer_email, cake_type, servings,
-        flavor_base, filling, decoration, custom_text, requested_date, requested_time,
-        reference_photo_url, notes, status, quote_amount, created_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+        flavor_base, filling, decoration, custom_text, selected_extras, estimated_price,
+        requested_date, requested_time, reference_photo_url, notes, status, quote_amount, created_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       ON CONFLICT (id) DO UPDATE SET
         status = EXCLUDED.status,
         quote_amount = EXCLUDED.quote_amount`,
@@ -570,6 +594,8 @@ export const PostgresService = {
         request.filling,
         request.decoration,
         request.customText || null,
+        JSON.stringify(request.selectedExtras || []),
+        request.estimatedPrice || null,
         request.requestedDate,
         request.requestedTime,
         request.referenceImageUrl || null,
@@ -589,6 +615,29 @@ export const PostgresService = {
       'UPDATE custom_cake_requests SET status = $1, quote_amount = COALESCE($2, quote_amount) WHERE id = $3',
       [status, quoteAmount || null, id]
     );
+  },
+
+  // CUSTOM CAKE CONFIGURATION
+  async getCakeConfig(): Promise<CustomCakeConfig> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const res = await p.query('SELECT data FROM custom_cake_config WHERE id = $1', ['default']);
+    if (res.rows.length > 0 && res.rows[0].data) {
+      return typeof res.rows[0].data === 'string' ? JSON.parse(res.rows[0].data) : res.rows[0].data;
+    }
+    return INITIAL_CUSTOM_CAKE_CONFIG;
+  },
+
+  async saveCakeConfig(config: CustomCakeConfig): Promise<CustomCakeConfig> {
+    await initPostgresTables();
+    const p = getDbPool();
+    await p.query(
+      `INSERT INTO custom_cake_config (id, data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`,
+      ['default', JSON.stringify(config)]
+    );
+    return config;
   },
 
   // CUSTOMERS / USERS

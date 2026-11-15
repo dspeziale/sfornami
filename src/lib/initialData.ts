@@ -1,4 +1,4 @@
-import { AllergenMeta, CategoryInfo, HomePageContent, Product, StoreSettings, TimeSlot } from './types';
+import { AllergenMeta, CategoryInfo, CustomCakeConfig, HomePageContent, Product, StoreSettings, TimeSlot } from './types';
 
 export const ALLERGENS_LIST: AllergenMeta[] = [
   { key: 'glutine', name: 'Glutine', icon: '🌾', description: 'Presente nei cereali (grano, segale, orzo, farro)' },
@@ -297,6 +297,59 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   ],
 };
 
+export const INITIAL_CUSTOM_CAKE_CONFIG: CustomCakeConfig = {
+  introTitle: 'Crea la Tua Torta dei Sogni',
+  introSubtitle: 'Compleanni, cerimonie, lauree o una domenica speciale: personalizza ogni dettaglio del tuo dolce artigianale e ricevilo fresco a domicilio a Roma.',
+  bannerBadge: 'Laboratorio Artigianale di Pasticceria • Roma',
+  basePricePerServing: 3.50, // 3.50€ a fetta
+  servingWeightKg: 0.12, // 120g a porzione
+  minHoursNotice: 48, // 48 ore di preavviso
+  allowPhotoUpload: true,
+  allowCustomDedication: true,
+  customDedicationPrice: 0, // Gratuita
+  servingsOptions: [6, 8, 10, 12, 15, 20, 25, 30, 40, 50],
+  cakeTypes: [
+    { id: 'millefoglie', name: 'Millefoglie Tradizionale Caramellata', description: 'Tre strati di sfoglia croccante al burro e delicata crema chantilly', priceModifier: 0, isPopular: true, isActive: true },
+    { id: 'pan_di_spagna', name: 'Torta Classica con Pan di Spagna', description: 'Morbida e soffice, ideale per bagne golose e scritte di compleanno', priceModifier: 0, isPopular: true, isActive: true },
+    { id: 'crostata_moderna', name: 'Crostata Moderna Sablée', description: 'Guscio friabile al burro, ganache montata e frutta fresca', priceModifier: 2.00, isPopular: false, isActive: true },
+    { id: 'naked_cake', name: 'Naked Cake Floreale da Cerimonia', description: 'Look rustico a strati a vista con decorazioni naturali e fiori edibili', priceModifier: 5.00, isPopular: true, isActive: true },
+    { id: 'red_velvet', name: 'Red Velvet Originale', description: 'Impasto vellutato color rubino con frosting setoso al mascarpone', priceModifier: 3.00, isPopular: false, isActive: true },
+    { id: 'sacher', name: 'Sacher Artigianale', description: 'Pan di spagna al cacao, confettura di albicocche e glassa al fondente', priceModifier: 4.00, isPopular: false, isActive: true },
+    { id: 'cheesecake', name: 'Cheesecake Cotta New York Style', description: 'Base di biscotto croccante, crema al formaggio e coulis ai frutti rossi', priceModifier: 2.50, isPopular: false, isActive: true },
+  ],
+  flavorBases: [
+    { id: 'base-vaniglia', name: 'Pan di Spagna alla Vaniglia Bourbon del Madagascar', description: 'Classico, sofficissimo e profumato', priceModifier: 0, isActive: true },
+    { id: 'base-cacao', name: 'Pan di Spagna al Cacao Olandese Extra Dark', description: 'Intenso e ricco di sapore cioccolatoso', priceModifier: 0, isActive: true },
+    { id: 'base-sfoglia', name: 'Sfoglia Croccante Caramellata al Burro Francese', description: 'Friabile e profumata', priceModifier: 0, isActive: true },
+    { id: 'base-frolla', name: 'Frolla Sablée Rustica alle Mandorle', description: 'Friabile con farina di mandorle', priceModifier: 0, isActive: true },
+    { id: 'base-redvelvet', name: 'Base Red Velvet Tradizionale', description: 'Soffice e vellutata', priceModifier: 1.50, isActive: true },
+    { id: 'base-pistacchio', name: 'Pan di Spagna Soffice al Pistacchio', description: 'Arricchito con granella e pasta di pistacchio puro', priceModifier: 3.00, isActive: true },
+  ],
+  fillings: [
+    { id: 'farc-chantilly-fragole', name: 'Crema Chantilly alla Vaniglia e Fragoline di Bosco', description: 'La combinazione più amata di sempre', priceModifier: 0, isPopular: true, isActive: true },
+    { id: 'farc-crema-cioccolato', name: 'Crema Pasticcera Tradizionale con Gocce di Cioccolato Fondente', description: 'Crema setosa al profumo di limone e pepite di fondente', priceModifier: 0, isPopular: true, isActive: true },
+    { id: 'farc-pistacchio', name: 'Crema al Pistacchio Puro di Bronte DOP', description: 'Gusto intenso e avvolgente', priceModifier: 3.50, isPopular: true, isActive: true },
+    { id: 'farc-cioccolato-70', name: 'Ganache Montata al Cioccolato Fondente Belga 70%', description: 'Per i veri amanti del cacao amaro', priceModifier: 2.00, isActive: true },
+    { id: 'farc-diplomatica', name: 'Crema Diplomatica Leggera con Frutti di Bosco Freschi', description: 'Morbida e fresca con lamponi e mirtilli', priceModifier: 1.50, isActive: true },
+    { id: 'farc-mascarpone-caffe', name: 'Crema al Mascarpone e Caffè Espresso (Gusto Tiramisù)', description: 'Ispirata al dolce italiano più famoso', priceModifier: 1.00, isActive: true },
+    { id: 'farc-nocciola-igp', name: 'Crema Gianduia con Nocciole Piemonte IGP', description: 'Golosissima e vellutata', priceModifier: 2.50, isActive: true },
+  ],
+  decorations: [
+    { id: 'dec-frutti-bosco', name: 'Cascata di Frutti di Bosco Freschi e Zucchero a Velo', description: 'Lamponi, mirtilli, more e ribes freschissimi', priceModifier: 0, isPopular: true, isActive: true },
+    { id: 'dec-fiori-edibili', name: 'Fiori Edibili Naturali e Rametti di Rosmarino', description: 'Elegante, romantica e perfetta per cerimonie', priceModifier: 3.00, isPopular: true, isActive: true },
+    { id: 'dec-macarons', name: 'Decorazione con Macarons Artigianali e Ciuffi di Crema', description: 'Tocco raffinato alla francese con macarons colorati', priceModifier: 4.00, isPopular: true, isActive: true },
+    { id: 'dec-ghiaccia', name: 'Ghiaccia Reale e Scritta Artistica Personalizzata a Mano', description: 'Disegnata a mano con sac à poche dai nostri maestri', priceModifier: 0, isActive: true },
+    { id: 'dec-cialda-foto', name: 'Ostia / Cialda Personalizzata per Bambini (Cartoni o Foto)', description: 'Ideale per feste a tema e compleanni bambini', priceModifier: 4.50, isActive: true },
+    { id: 'dec-glassa-specchio', name: 'Glassa a Specchio Lucida al Cioccolato', description: 'Copertura brillante e scenografica', priceModifier: 3.50, isActive: true },
+  ],
+  extraAddons: [
+    { id: 'extra-candeline', name: 'Set Candeline Sagomate per Compleanno', price: 2.50, description: 'Candeline colorate con supporti', isActive: true },
+    { id: 'extra-topper', name: 'Topper Personalizzato in Legno / Plexiglass (Es. Happy Birthday)', price: 5.00, description: 'Scritta tridimensionale da infilare sulla torta', isActive: true },
+    { id: 'extra-scatola-lusso', name: 'Confezione Regalo di Lusso con Nastro in Raso', price: 4.00, description: 'Scatola trasparente da esposizione con fiocco', isActive: true },
+    { id: 'extra-bottiglia', name: 'Spumante Prosecco Valdobbiadene DOCG (Bottiglia 75cl)', price: 12.00, description: 'Per brindare alla grande', isActive: true },
+  ],
+};
+
 export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
   // 1. HERO
   heroBadge: 'PASTICCERIA ARTIGIANALE • CONSEGNA A DOMICILIO A ROMA',
@@ -480,4 +533,5 @@ export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
     },
   ],
 };
+
 

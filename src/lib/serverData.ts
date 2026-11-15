@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Product, Order, CustomCakeRequest, StoreSettings, TimeSlot, HomePageContent } from './types';
-import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS, INITIAL_HOMEPAGE_CONTENT } from './initialData';
+import { Product, Order, CustomCakeRequest, StoreSettings, TimeSlot, HomePageContent, CustomCakeConfig } from './types';
+import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS, INITIAL_HOMEPAGE_CONTENT, INITIAL_CUSTOM_CAKE_CONFIG } from './initialData';
 import { PostgresService } from './db';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -227,5 +227,25 @@ export const ServerData = {
     }
     await writeJsonFile('time-slots.json', slots);
     return slots;
+  },
+
+  // CUSTOM CAKE CONFIG
+  async getCakeConfig(): Promise<CustomCakeConfig> {
+    try {
+      return await PostgresService.getCakeConfig();
+    } catch (e) {
+      console.warn('Postgres getCakeConfig fallback to JSON:', e);
+      return readJsonFile<CustomCakeConfig>('cake-config.json', INITIAL_CUSTOM_CAKE_CONFIG);
+    }
+  },
+
+  async saveCakeConfig(config: CustomCakeConfig): Promise<CustomCakeConfig> {
+    try {
+      await PostgresService.saveCakeConfig(config);
+    } catch (e) {
+      console.warn('Postgres saveCakeConfig fallback to JSON:', e);
+    }
+    await writeJsonFile('cake-config.json', config);
+    return config;
   },
 };
