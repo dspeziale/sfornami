@@ -36,7 +36,7 @@ export const Navbar: React.FC = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DE7E42]"></span>
             </span>
             <div className="text-[11px] sm:text-xs leading-tight">
-              <span>🧁 Laboratorio artigianale di pasticceria & torte a Roma</span>
+              <span>🧁 Insieme per Seul 2027 • Pasticceria & torte artigianali a Roma</span>
               <div className="font-bold text-[#DE7E42] sm:inline sm:before:content-['•_']">
                 Solo ordini online con consegna a domicilio
                 {settings?.freeDeliveryThreshold && (

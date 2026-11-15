@@ -116,8 +116,8 @@ function HomeCatalogContent() {
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-[#57382E] tracking-tight flex items-center gap-2">
             <span>La Nostra Pasticceria</span>
-            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-[#FFE29A] text-[#57382E] text-[10px] font-bold uppercase">
-              Torraccia • Roma
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#FFE29A] text-[#57382E] text-[10px] font-black uppercase tracking-wider">
+              Insieme per Seul 2027
             </span>
           </h1>
           <p className="text-[11px] sm:text-xs text-[#7E5649]">

@@ -273,7 +273,7 @@ export const INITIAL_TIME_SLOTS: TimeSlot[] = [
 
 export const INITIAL_STORE_SETTINGS: StoreSettings = {
   storeName: 'SFORNAMÌ',
-  payoff: 'Il buono fatto a mano, con un pizzico di felicità.',
+  payoff: 'Insieme per Seul 2027 • Il buono fatto a mano, con un pizzico di felicità.',
   address: 'Quartiere Torraccia',
   city: 'Roma',
   cap: '00156',
@@ -289,7 +289,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   servedCaps: ['00156', '00157', '00158', '00159', '00137', '00139', '00141', '00161', '00162', '00186', '00187', '00198'],
   stripeEnabled: false, // pronto per integrazione con credenziali
   pickupOpeningHours: 'Laboratorio di produzione: Consegne a domicilio Mar - Dom',
-  specialNotice: 'Laboratorio artigianale a Roma (Torraccia): impasti a lenta lievitazione naturale e consegna express a domicilio.',
+  specialNotice: 'Insieme per Seul 2027 • Laboratorio artigianale di dolci e torte a Roma con consegna a domicilio.',
   defaultAddons: [
     { id: 'addon-regalo', name: 'Confezione regalo con fiocco artigianale', price: 2.50 },
     { id: 'addon-scritta', name: 'Scritta personalizzata su cialda/targhetta', price: 3.00, allowsCustomText: true },
