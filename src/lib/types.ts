@@ -332,3 +332,21 @@ export interface HomePageContent {
   instagramPosts: HomePageInstagramPost[];
 }
 
+export interface RecentOrderActivity {
+  id: string;
+  customerName: string;
+  city: string;
+  productSummary: string;
+  timeAgo: string;
+  isToday: boolean;
+  total?: number;
+}
+
+export interface LiveActivityStats {
+  viewsToday: number;
+  ordersToday: number;
+  totalOrders: number;
+  recentOrders: RecentOrderActivity[];
+}
+
+

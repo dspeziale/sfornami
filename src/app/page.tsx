@@ -7,6 +7,7 @@ import { CATEGORIES, ALLERGENS_LIST } from '@/lib/initialData';
 import { Allergen, Product, ProductCategory } from '@/lib/types';
 import { DataService } from '@/lib/store';
 import { ProductCard } from '@/components/products/ProductCard';
+import { LiveActivityBanner } from '@/components/home/LiveActivityBanner';
 
 function HomeCatalogContent() {
   const searchParams = useSearchParams();
@@ -130,6 +131,9 @@ function HomeCatalogContent() {
           </span>
         </div>
       </div>
+
+      {/* Live Social Proof: Visite Oggi & Ordini Ricevuti */}
+      <LiveActivityBanner />
 
       {/* Category Tabs: Real categories present in catalog */}
       {categoriesTabs.length > 1 && (

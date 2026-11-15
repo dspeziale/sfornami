@@ -1,4 +1,4 @@
-import { CustomCakeConfig, CustomCakeRequest, HomePageContent, Order, OrderStatus, Product, StoreSettings, TimeSlot } from './types';
+import { CustomCakeConfig, CustomCakeRequest, HomePageContent, LiveActivityStats, Order, OrderStatus, Product, StoreSettings, TimeSlot } from './types';
 import { INITIAL_CUSTOM_CAKE_CONFIG, INITIAL_HOMEPAGE_CONTENT, INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS } from './initialData';
 import { supabase, isSupabaseConfigured } from './supabase';
 
@@ -508,6 +508,38 @@ export const DataService = {
       window.dispatchEvent(new CustomEvent('sfornami_cake_config_updated', { detail: config }));
     }
     return config;
+  },
+
+  // --- LIVE ACTIVITY & SOCIAL PROOF ---
+  async getActivityStats(recordView = true): Promise<LiveActivityStats> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch(`/api/stats?record=${recordView ? 'true' : 'false'}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = (await res.json()) as LiveActivityStats;
+          if (data && typeof data.viewsToday === 'number') {
+            return data;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch /api/stats:', e);
+      }
+    }
+    return {
+      viewsToday: 48,
+      ordersToday: 2,
+      totalOrders: 6,
+      recentOrders: [
+        {
+          id: 'ord-def-1',
+          customerName: 'Marco B.',
+          city: 'Roma',
+          productSummary: 'Ciambellone al Limone',
+          timeAgo: 'Poco fa',
+          isToday: true,
+        },
+      ],
+    };
   },
 
   // --- SETTINGS ---

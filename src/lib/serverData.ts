@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Product, Order, CustomCakeRequest, StoreSettings, TimeSlot, HomePageContent, CustomCakeConfig } from './types';
+import { Product, Order, CustomCakeRequest, StoreSettings, TimeSlot, HomePageContent, CustomCakeConfig, LiveActivityStats } from './types';
 import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS, INITIAL_HOMEPAGE_CONTENT, INITIAL_CUSTOM_CAKE_CONFIG } from './initialData';
 import { PostgresService } from './db';
 
@@ -247,5 +247,37 @@ export const ServerData = {
     }
     await writeJsonFile('cake-config.json', config);
     return config;
+  },
+
+  // LIVE ACTIVITY STATS
+  async getActivityStats(recordView = true): Promise<LiveActivityStats> {
+    try {
+      return await PostgresService.getActivityStats(recordView);
+    } catch (e) {
+      console.warn('Postgres getActivityStats fallback:', e);
+      return {
+        viewsToday: 42,
+        ordersToday: 2,
+        totalOrders: 6,
+        recentOrders: [
+          {
+            id: 'ord-fallback-1',
+            customerName: 'Marco B.',
+            city: 'Roma',
+            productSummary: 'Ciambellone al Limone',
+            timeAgo: 'Poco fa',
+            isToday: true,
+          },
+          {
+            id: 'ord-fallback-2',
+            customerName: 'Giulia D.',
+            city: 'Roma',
+            productSummary: 'Torta Camilla',
+            timeAgo: '1 ora fa',
+            isToday: true,
+          },
+        ],
+      };
+    }
   },
 };

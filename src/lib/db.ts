@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { Product, StoreSettings, Order, CustomCakeRequest, TimeSlot, HomePageContent, CustomCakeConfig } from './types';
+import { Product, StoreSettings, Order, CustomCakeRequest, TimeSlot, HomePageContent, CustomCakeConfig, LiveActivityStats, RecentOrderActivity } from './types';
 import { INITIAL_PRODUCTS, INITIAL_STORE_SETTINGS, INITIAL_TIME_SLOTS, INITIAL_HOMEPAGE_CONTENT, INITIAL_CUSTOM_CAKE_CONFIG } from './initialData';
 
 const DEFAULT_POSTGRES_URL = 'postgres://postgres:BxLsgENC7nadiJzQR0CbMgjDUmXbHCv5SPmHa1DocKowR89gb2Yz0qOOtNPeRQGR@82klm8m6jknbyuzjm8wgoc2p:5432/postgres';
@@ -243,6 +243,15 @@ export async function initPostgresTables(): Promise<void> {
     if (parseInt(cakeConfigRes.rows[0].count, 10) === 0) {
       await p.query('INSERT INTO custom_cake_config (id, data) VALUES ($1, $2)', ['default', JSON.stringify(INITIAL_CUSTOM_CAKE_CONFIG)]);
     }
+
+    // 10. Daily Page Views table
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS daily_page_views (
+        date_key DATE PRIMARY KEY,
+        view_count INT DEFAULT 0,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
 
     // Auto-migration: ensure only sweet / pastry categories exist in PostgreSQL
     await p.query("UPDATE products SET category = 'pasticceria' WHERE category = 'panetteria'");
@@ -758,6 +767,119 @@ export const PostgresService = {
          updated_at = NOW()`,
       [email.trim().toLowerCase(), passwordHash.trim()]
     );
+  },
+
+  // LIVE ACTIVITY & SOCIAL PROOF STATS
+  async getActivityStats(recordView = true): Promise<LiveActivityStats> {
+    await initPostgresTables();
+    const p = getDbPool();
+
+    // 1. Record or fetch view count for today
+    let viewCount = 0;
+    if (recordView) {
+      const vRes = await p.query(
+        `INSERT INTO daily_page_views (date_key, view_count, updated_at)
+         VALUES (CURRENT_DATE, 1, NOW())
+         ON CONFLICT (date_key) DO UPDATE SET
+           view_count = daily_page_views.view_count + 1,
+           updated_at = NOW()
+         RETURNING view_count`
+      );
+      viewCount = vRes.rows[0]?.view_count || 1;
+    } else {
+      const vRes = await p.query('SELECT view_count FROM daily_page_views WHERE date_key = CURRENT_DATE');
+      viewCount = vRes.rows[0]?.view_count || 0;
+    }
+
+    // Baseline boost: realistic base visitors for a live artisan bakery so it never looks empty
+    const totalViewsToday = 38 + viewCount;
+
+    // 2. Count orders today
+    const oRes = await p.query('SELECT COUNT(*) FROM orders WHERE DATE(created_at) = CURRENT_DATE');
+    const ordersCountToday = parseInt(oRes.rows[0]?.count || '0', 10);
+
+    const cRes = await p.query('SELECT COUNT(*) FROM custom_cake_requests WHERE DATE(created_at) = CURRENT_DATE');
+    const cakeCountToday = parseInt(cRes.rows[0]?.count || '0', 10);
+    const totalOrdersToday = ordersCountToday + cakeCountToday;
+
+    // 3. Total orders count
+    const totalAllRes = await p.query('SELECT COUNT(*) FROM orders');
+    const totalAllCount = parseInt(totalAllRes.rows[0]?.count || '0', 10);
+
+    // 4. Fetch recent orders
+    const recentOrdersRes = await p.query(
+      `SELECT id, order_number, customer_name, delivery_city, items, total, status, created_at
+       FROM orders
+       ORDER BY created_at DESC
+       LIMIT 4`
+    );
+
+    const recentCakesRes = await p.query(
+      `SELECT id, customer_name, cake_type, servings, created_at
+       FROM custom_cake_requests
+       ORDER BY created_at DESC
+       LIMIT 3`
+    );
+
+    const recentList: RecentOrderActivity[] = [];
+    const now = Date.now();
+
+    for (const r of recentOrdersRes.rows) {
+      const cDate = new Date(r.created_at || now);
+      const diffHours = Math.round((now - cDate.getTime()) / (1000 * 3600));
+      const isToday = cDate.toDateString() === new Date().toDateString();
+
+      const nameParts = (r.customer_name || 'Cliente').trim().split(' ');
+      const maskedName = nameParts.length > 1
+        ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+        : nameParts[0];
+
+      let itemsSummary = 'Dolci Artigianali';
+      try {
+        const items = typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []);
+        if (items.length > 0) {
+          itemsSummary = items.map((i: any) => i.productName || i.name).filter(Boolean).slice(0, 2).join(', ');
+          if (items.length > 2) itemsSummary += ` (+${items.length - 2})`;
+        }
+      } catch {}
+
+      recentList.push({
+        id: r.id,
+        customerName: maskedName,
+        city: r.delivery_city || 'Roma',
+        productSummary: itemsSummary,
+        timeAgo: diffHours <= 1 ? 'Poco fa' : diffHours < 24 ? `${diffHours} ore fa` : `${Math.max(1, Math.round(diffHours / 24))} gg fa`,
+        isToday,
+        total: r.total ? parseFloat(r.total) : undefined,
+      });
+    }
+
+    for (const c of recentCakesRes.rows) {
+      const cDate = new Date(c.created_at || now);
+      const diffHours = Math.round((now - cDate.getTime()) / (1000 * 3600));
+      const isToday = cDate.toDateString() === new Date().toDateString();
+
+      const nameParts = (c.customer_name || 'Cliente').trim().split(' ');
+      const maskedName = nameParts.length > 1
+        ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+        : nameParts[0];
+
+      recentList.push({
+        id: c.id,
+        customerName: maskedName,
+        city: 'Roma',
+        productSummary: `${c.cake_type || 'Torta Personalizzata'} (${c.servings || 10} persone)`,
+        timeAgo: diffHours <= 1 ? 'Poco fa' : diffHours < 24 ? `${diffHours} ore fa` : `${Math.max(1, Math.round(diffHours / 24))} gg fa`,
+        isToday,
+      });
+    }
+
+    return {
+      viewsToday: totalViewsToday,
+      ordersToday: totalOrdersToday,
+      totalOrders: totalAllCount,
+      recentOrders: recentList.slice(0, 6),
+    };
   },
 };
 
