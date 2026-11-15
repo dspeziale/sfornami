@@ -389,6 +389,44 @@ export const DataService = {
     }
   },
 
+  async deleteOrder(orderId: string): Promise<boolean> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch(`/api/orders?id=${encodeURIComponent(orderId)}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          const stored = localStorage.getItem(STORAGE_KEYS.ORDERS);
+          if (stored) {
+            try {
+              const list: Order[] = JSON.parse(stored);
+              const filtered = list.filter(o => o.id !== orderId && o.orderNumber !== orderId);
+              localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(filtered));
+            } catch (e) {
+              console.warn(e);
+            }
+          }
+          return true;
+        }
+      } catch (e) {
+        console.warn('Failed to delete order via /api/orders:', e);
+      }
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('orders').delete().eq('id', orderId);
+      } catch (e) {
+        console.warn('Supabase delete error', e);
+      }
+    }
+
+    const currentOrders = await this.getOrders();
+    const filtered = currentOrders.filter(o => o.id !== orderId && o.orderNumber !== orderId);
+    setLocalItem(STORAGE_KEYS.ORDERS, filtered);
+    return true;
+  },
+
   // --- CUSTOM CAKE REQUESTS ---
   async getCustomCakeRequests(): Promise<CustomCakeRequest[]> {
     if (typeof window !== 'undefined') {
@@ -471,6 +509,36 @@ export const DataService = {
       if (quoteAmount !== undefined) req.quoteAmount = quoteAmount;
       setLocalItem(STORAGE_KEYS.CAKE_REQUESTS, requests);
     }
+  },
+
+  async deleteCustomCakeRequest(id: string): Promise<boolean> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch(`/api/torte?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          const stored = localStorage.getItem(STORAGE_KEYS.CAKE_REQUESTS);
+          if (stored) {
+            try {
+              const list: CustomCakeRequest[] = JSON.parse(stored);
+              const filtered = list.filter(r => r.id !== id);
+              localStorage.setItem(STORAGE_KEYS.CAKE_REQUESTS, JSON.stringify(filtered));
+            } catch (e) {
+              console.warn(e);
+            }
+          }
+          return true;
+        }
+      } catch (e) {
+        console.warn('Failed to delete cake request via /api/torte:', e);
+      }
+    }
+
+    const currentRequests = await this.getCustomCakeRequests();
+    const filtered = currentRequests.filter(r => r.id !== id);
+    setLocalItem(STORAGE_KEYS.CAKE_REQUESTS, filtered);
+    return true;
   },
 
   // --- CUSTOM CAKE CONFIGURATION ---

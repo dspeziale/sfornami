@@ -17,6 +17,7 @@ import {
   Store,
   DollarSign,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
 import { CustomCakeRequest, Order, OrderStatus } from '@/lib/types';
@@ -28,6 +29,8 @@ export default function AdminDashboardPage() {
   const [settings, setSettings] = useState(INITIAL_STORE_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [todayStr, setTodayStr] = useState('');
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -50,6 +53,21 @@ export default function AdminDashboardPage() {
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await DataService.updateOrderStatus(orderId, newStatus);
     await loadData();
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    try {
+      await DataService.deleteOrder(orderToDelete.id);
+      setOrderToDelete(null);
+      await loadData();
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      alert("Errore durante l'eliminazione dell'ordine.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // KPIs
@@ -285,6 +303,14 @@ export default function AdminDashboardPage() {
                         >
                           Dettagli
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => setOrderToDelete(order)}
+                          className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                          title="Elimina ordine"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -359,6 +385,59 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Dialog for Deleting Order */}
+      {orderToDelete && (
+        <div className="fixed inset-0 z-60 overflow-y-auto p-4 flex items-center justify-center animate-fadeIn">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => !isDeleting && setOrderToDelete(null)}
+          />
+          <div className="relative bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full border-2 border-red-200 shadow-2xl z-20 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-1.5">
+              <h3 className="text-lg font-black text-[#57382E]">
+                Eliminare l&apos;ordine {orderToDelete.orderNumber}?
+              </h3>
+              <p className="text-xs text-[#7E5649] leading-relaxed">
+                Stai per cancellare definitivamente l&apos;ordine del cliente{' '}
+                <strong className="text-[#57382E]">{orderToDelete.customerName}</strong> (importo €{orderToDelete.total.toFixed(2)}).
+                Questa azione è irreversibile.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setOrderToDelete(null)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-[#7E5649] hover:bg-gray-100 transition-colors"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDeleteOrder}
+                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black shadow-md shadow-red-600/30 flex items-center gap-1.5 transition-colors"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminazione...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Sì, elimina definitivamente</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

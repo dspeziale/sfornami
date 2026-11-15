@@ -16,6 +16,8 @@ import {
   Store,
   RefreshCw,
   X,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { DataService } from '@/lib/store';
 import { Order, OrderStatus } from '@/lib/types';
@@ -30,6 +32,9 @@ function OrdersContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
   const loadOrders = async () => {
     setLoading(true);
@@ -51,6 +56,26 @@ function OrdersContent() {
     await loadOrders();
     if (selectedOrder && selectedOrder.id === orderId) {
       setSelectedOrder(prev => (prev ? { ...prev, status: newStatus } : null));
+    }
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    try {
+      await DataService.deleteOrder(orderToDelete.id);
+      setActionFeedback(`Ordine ${orderToDelete.orderNumber} eliminato con successo.`);
+      setTimeout(() => setActionFeedback(null), 4000);
+      if (selectedOrder?.id === orderToDelete.id) {
+        setSelectedOrder(null);
+      }
+      setOrderToDelete(null);
+      await loadOrders();
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      alert("Errore durante l'eliminazione dell'ordine.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -225,6 +250,13 @@ function OrdersContent() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => setOrderToDelete(order)}
+                            className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                            title="Elimina definitivamente questo ordine"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -307,25 +339,97 @@ function OrdersContent() {
             )}
 
             {/* Actions */}
-            <div className="pt-3 border-t border-[#F5A16C]/20 flex flex-wrap gap-2 justify-end">
+            <div className="pt-3 border-t border-[#F5A16C]/20 flex flex-wrap gap-2 justify-between items-center">
               <button
-                onClick={() => window.print()}
-                className="px-4 py-2 rounded-xl bg-white border border-[#F5A16C]/30 text-[#57382E] text-xs font-bold flex items-center gap-1.5"
+                type="button"
+                onClick={() => setOrderToDelete(selectedOrder)}
+                className="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
               >
-                <Printer className="w-4 h-4 text-[#DE7E42]" />
-                <span>Stampa Comanda</span>
+                <Trash2 className="w-4 h-4" />
+                <span>Elimina Ordine</span>
               </button>
-              <a
-                href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-[#25D366] text-white text-xs font-bold flex items-center gap-1.5"
-              >
-                <MessageCircle className="w-4 h-4 fill-white" />
-                <span>Chat WhatsApp</span>
-              </a>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-white border border-[#F5A16C]/30 text-[#57382E] text-xs font-bold flex items-center gap-1.5"
+                >
+                  <Printer className="w-4 h-4 text-[#DE7E42]" />
+                  <span>Stampa Comanda</span>
+                </button>
+                <a
+                  href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-xl bg-[#25D366] text-white text-xs font-bold flex items-center gap-1.5"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white" />
+                  <span>Chat WhatsApp</span>
+                </a>
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Deleting Order */}
+      {orderToDelete && (
+        <div className="fixed inset-0 z-60 overflow-y-auto p-4 flex items-center justify-center animate-fadeIn">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => !isDeleting && setOrderToDelete(null)}
+          />
+          <div className="relative bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full border-2 border-red-200 shadow-2xl z-20 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-1.5">
+              <h3 className="text-lg font-black text-[#57382E]">
+                Eliminare l&apos;ordine {orderToDelete.orderNumber}?
+              </h3>
+              <p className="text-xs text-[#7E5649] leading-relaxed">
+                Stai per cancellare definitivamente l&apos;ordine del cliente{' '}
+                <strong className="text-[#57382E]">{orderToDelete.customerName}</strong> (importo €{orderToDelete.total.toFixed(2)}).
+                Questa azione è irreversibile.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setOrderToDelete(null)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-[#7E5649] hover:bg-gray-100 transition-colors"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDeleteOrder}
+                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black shadow-md shadow-red-600/30 flex items-center gap-1.5 transition-colors"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminazione...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Sì, elimina definitivamente</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Feedback Notification */}
+      {actionFeedback && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#57382E] text-white px-5 py-3 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 animate-bounce">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{actionFeedback}</span>
         </div>
       )}
     </div>

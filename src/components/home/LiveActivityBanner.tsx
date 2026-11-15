@@ -66,7 +66,8 @@ export function LiveActivityBanner() {
           <div className="flex items-center gap-1.5 font-bold text-[#57382E]">
             <Eye className="w-3.5 h-3.5 text-[#DE7E42]" />
             <span>
-              <strong className="font-black text-[#DE7E42]">{stats.viewsToday}</strong> persone hanno visitato la pagina oggi
+              <strong className="font-black text-[#DE7E42]">{stats.viewsToday}</strong>{' '}
+              {stats.viewsToday === 1 ? 'persona ha visitato il catalogo oggi' : 'persone hanno visitato il catalogo oggi'}
             </span>
           </div>
         </div>

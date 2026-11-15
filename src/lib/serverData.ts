@@ -167,6 +167,18 @@ export const ServerData = {
     }
   },
 
+  async deleteOrder(orderId: string): Promise<boolean> {
+    try {
+      await PostgresService.deleteOrder(orderId);
+    } catch (e) {
+      console.warn('Postgres deleteOrder fallback to JSON:', e);
+    }
+    const orders = await readJsonFile<Order[]>('orders.json', []);
+    const filtered = orders.filter(o => o.id !== orderId && o.orderNumber !== orderId);
+    await writeJsonFile('orders.json', filtered);
+    return true;
+  },
+
   // CUSTOM CAKES
   async getCakeRequests(): Promise<CustomCakeRequest[]> {
     try {
@@ -209,6 +221,18 @@ export const ServerData = {
     }
   },
 
+  async deleteCakeRequest(id: string): Promise<boolean> {
+    try {
+      await PostgresService.deleteCustomCakeRequest(id);
+    } catch (e) {
+      console.warn('Postgres deleteCakeRequest fallback to JSON:', e);
+    }
+    const list = await readJsonFile<CustomCakeRequest[]>('cake-requests.json', []);
+    const filtered = list.filter(r => r.id !== id);
+    await writeJsonFile('cake-requests.json', filtered);
+    return true;
+  },
+
   // TIME SLOTS
   async getTimeSlots(): Promise<TimeSlot[]> {
     try {
@@ -249,34 +273,26 @@ export const ServerData = {
     return config;
   },
 
-  // LIVE ACTIVITY STATS
-  async getActivityStats(recordView = true): Promise<LiveActivityStats> {
+  // LIVE ACTIVITY STATS (Cookie-based unique visitor tracking)
+  async getActivityStats(visitorId?: string, recordView = true): Promise<LiveActivityStats> {
     try {
-      return await PostgresService.getActivityStats(recordView);
+      return await PostgresService.getActivityStats(visitorId, recordView);
     } catch (e) {
       console.warn('Postgres getActivityStats fallback:', e);
+      // JSON fallback for cookie-based unique visitors
+      const today = new Date().toISOString().split('T')[0];
+      const visitorsMap = await readJsonFile<Record<string, string[]>>('daily-visitors.json', {});
+      if (!visitorsMap[today]) visitorsMap[today] = [];
+      if (recordView && visitorId && !visitorsMap[today].includes(visitorId)) {
+        visitorsMap[today].push(visitorId);
+        await writeJsonFile('daily-visitors.json', visitorsMap);
+      }
+      const realViews = visitorsMap[today].length || (recordView ? 1 : 0);
       return {
-        viewsToday: 42,
-        ordersToday: 2,
-        totalOrders: 6,
-        recentOrders: [
-          {
-            id: 'ord-fallback-1',
-            customerName: 'Marco B.',
-            city: 'Roma',
-            productSummary: 'Ciambellone al Limone',
-            timeAgo: 'Poco fa',
-            isToday: true,
-          },
-          {
-            id: 'ord-fallback-2',
-            customerName: 'Giulia D.',
-            city: 'Roma',
-            productSummary: 'Torta Camilla',
-            timeAgo: '1 ora fa',
-            isToday: true,
-          },
-        ],
+        viewsToday: realViews,
+        ordersToday: 0,
+        totalOrders: 0,
+        recentOrders: [],
       };
     }
   },

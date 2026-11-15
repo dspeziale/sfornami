@@ -79,6 +79,14 @@ export default function AdminTortePage() {
     await loadRequests();
   };
 
+  const handleDeleteRequest = async (id: string) => {
+    if (!window.confirm(`Sei sicuro di voler eliminare la richiesta di torta ${id}?`)) {
+      return;
+    }
+    await DataService.deleteCustomCakeRequest(id);
+    await loadRequests();
+  };
+
   const handleSaveConfig = async () => {
     setSavingConfig(true);
     try {
@@ -334,24 +342,34 @@ export default function AdminTortePage() {
                         </p>
                       </div>
 
-                      <select
-                        value={req.status}
-                        onChange={e => handleStatusChange(req.id, e.target.value as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black border cursor-pointer ${
-                          req.status === 'in_valutazione'
-                            ? 'bg-amber-100 text-amber-800 border-amber-300'
-                            : req.status === 'preventivo_inviato'
-                            ? 'bg-blue-100 text-blue-800 border-blue-300'
-                            : req.status === 'confermata'
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                            : 'bg-rose-100 text-rose-800 border-rose-300'
-                        }`}
-                      >
-                        <option value="in_valutazione">In Valutazione</option>
-                        <option value="preventivo_inviato">Preventivo Inviato</option>
-                        <option value="confermata">Confermata</option>
-                        <option value="rifiutata">Rifiutata</option>
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={req.status}
+                          onChange={e => handleStatusChange(req.id, e.target.value as any)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black border cursor-pointer ${
+                            req.status === 'in_valutazione'
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : req.status === 'preventivo_inviato'
+                              ? 'bg-blue-100 text-blue-800 border-blue-300'
+                              : req.status === 'confermata'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                              : 'bg-rose-100 text-rose-800 border-rose-300'
+                          }`}
+                        >
+                          <option value="in_valutazione">In Valutazione</option>
+                          <option value="preventivo_inviato">Preventivo Inviato</option>
+                          <option value="confermata">Confermata</option>
+                          <option value="rifiutata">Rifiutata</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRequest(req.id)}
+                          className="p-1.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+                          title="Elimina questa richiesta torta"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* DETAILS BOX */}

@@ -39,3 +39,26 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update cake status' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    let id = url.searchParams.get('id');
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch {
+        // ignore
+      }
+    }
+    if (!id) {
+      return NextResponse.json({ error: 'Missing cake request id' }, { status: 400 });
+    }
+    await ServerData.deleteCakeRequest(id);
+    return NextResponse.json({ success: true, deletedId: id });
+  } catch (err) {
+    console.error('API DELETE /api/torte error:', err);
+    return NextResponse.json({ error: 'Failed to delete cake request' }, { status: 500 });
+  }
+}

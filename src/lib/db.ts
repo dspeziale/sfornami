@@ -244,12 +244,21 @@ export async function initPostgresTables(): Promise<void> {
       await p.query('INSERT INTO custom_cake_config (id, data) VALUES ($1, $2)', ['default', JSON.stringify(INITIAL_CUSTOM_CAKE_CONFIG)]);
     }
 
-    // 10. Daily Page Views table
+    // 10. Daily Page Views & Unique Visitors table
     await p.query(`
       CREATE TABLE IF NOT EXISTS daily_page_views (
         date_key DATE PRIMARY KEY,
         view_count INT DEFAULT 0,
         updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS daily_unique_visitors (
+        date_key DATE NOT NULL,
+        visitor_id VARCHAR(128) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (date_key, visitor_id)
       );
     `);
 
@@ -529,6 +538,13 @@ export const PostgresService = {
     await p.query('UPDATE orders SET status = $1 WHERE id = $2', [status, orderId]);
   },
 
+  async deleteOrder(orderId: string): Promise<boolean> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const res = await p.query('DELETE FROM orders WHERE id = $1 OR order_number = $1', [orderId]);
+    return (res.rowCount ?? 0) > 0;
+  },
+
   // TIME SLOTS
   async getTimeSlots(): Promise<TimeSlot[]> {
     await initPostgresTables();
@@ -624,6 +640,13 @@ export const PostgresService = {
       'UPDATE custom_cake_requests SET status = $1, quote_amount = COALESCE($2, quote_amount) WHERE id = $3',
       [status, quoteAmount || null, id]
     );
+  },
+
+  async deleteCustomCakeRequest(id: string): Promise<boolean> {
+    await initPostgresTables();
+    const p = getDbPool();
+    const res = await p.query('DELETE FROM custom_cake_requests WHERE id = $1', [id]);
+    return (res.rowCount ?? 0) > 0;
   },
 
   // CUSTOM CAKE CONFIGURATION
@@ -769,30 +792,31 @@ export const PostgresService = {
     );
   },
 
-  // LIVE ACTIVITY & SOCIAL PROOF STATS
-  async getActivityStats(recordView = true): Promise<LiveActivityStats> {
+  // LIVE ACTIVITY & SOCIAL PROOF STATS (Cookie-based unique visitor tracking)
+  async getActivityStats(visitorId?: string, recordView = true): Promise<LiveActivityStats> {
     await initPostgresTables();
     const p = getDbPool();
 
-    // 1. Record or fetch view count for today
-    let viewCount = 0;
-    if (recordView) {
-      const vRes = await p.query(
-        `INSERT INTO daily_page_views (date_key, view_count, updated_at)
-         VALUES (CURRENT_DATE, 1, NOW())
-         ON CONFLICT (date_key) DO UPDATE SET
-           view_count = daily_page_views.view_count + 1,
-           updated_at = NOW()
-         RETURNING view_count`
+    // 1. Record unique visitor for today if recordView is true and visitorId provided
+    if (recordView && visitorId) {
+      await p.query(
+        `INSERT INTO daily_unique_visitors (date_key, visitor_id, created_at)
+         VALUES (CURRENT_DATE, $1, NOW())
+         ON CONFLICT (date_key, visitor_id) DO NOTHING`,
+        [visitorId]
       );
-      viewCount = vRes.rows[0]?.view_count || 1;
-    } else {
-      const vRes = await p.query('SELECT view_count FROM daily_page_views WHERE date_key = CURRENT_DATE');
-      viewCount = vRes.rows[0]?.view_count || 0;
     }
 
-    // Baseline boost: realistic base visitors for a live artisan bakery so it never looks empty
-    const totalViewsToday = 38 + viewCount;
+    // 2. Count genuine unique visitors for today
+    const vRes = await p.query(
+      'SELECT COUNT(DISTINCT visitor_id) AS cnt FROM daily_unique_visitors WHERE date_key = CURRENT_DATE'
+    );
+    let totalViewsToday = parseInt(vRes.rows[0]?.cnt || '0', 10);
+
+    // If no unique records yet, ensure at least 1 when visiting
+    if (totalViewsToday === 0 && recordView) {
+      totalViewsToday = 1;
+    }
 
     // 2. Count orders today
     const oRes = await p.query('SELECT COUNT(*) FROM orders WHERE DATE(created_at) = CURRENT_DATE');
