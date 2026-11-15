@@ -78,8 +78,8 @@ export const Navbar: React.FC = () => {
                   key={link.href}
                   href={link.href}
                   className={`px-3 py-2 rounded-xl text-sm font-bold transition-all relative ${isActive
-                      ? 'text-[#57382E] bg-[#FFE29A]/60 shadow-xs'
-                      : 'text-[#7E5649] hover:text-[#57382E] hover:bg-white/60'
+                    ? 'text-[#57382E] bg-[#FFE29A]/60 shadow-xs'
+                    : 'text-[#7E5649] hover:text-[#57382E] hover:bg-white/60'
                     } ${link.highlight ? 'text-[#DE7E42]' : ''}`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -150,8 +150,8 @@ export const Navbar: React.FC = () => {
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center justify-between px-4 py-3 rounded-2xl text-base font-bold transition-colors ${isActive
-                        ? 'bg-[#FFE29A] text-[#57382E]'
-                        : 'text-[#7E5649] hover:bg-white'
+                      ? 'bg-[#FFE29A] text-[#57382E]'
+                      : 'text-[#7E5649] hover:bg-white'
                       }`}
                   >
                     <span className="flex items-center gap-2">

@@ -244,8 +244,8 @@ export default function AdminProdottiPage() {
     setFormPrice(3.50);
     setFormUnit('Al pezzo');
     setFormWeight('500g');
-    setFormImageUrl('https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80');
-    setFormImages(['https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80']);
+    setFormImageUrl('https://sfornami.dsc-italy.app/og-image.jpg');
+    setFormImages(['https://sfornami.dsc-italy.app/og-image.jpg']);
     setCustomUrlInput('');
     setFormIsAvailable(true);
     setFormIsFeatured(false);
@@ -324,7 +324,7 @@ export default function AdminProdottiPage() {
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const slug = formSlug.trim() || formName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const mainImg = formImages[0] || formImageUrl || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80';
+    const mainImg = formImages[0] || formImageUrl || 'https://sfornami.dsc-italy.app/og-image.jpg';
     const productData: Product = {
       id: editingProduct ? editingProduct.id : `prod-${Date.now()}`,
       slug,

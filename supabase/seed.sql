@@ -5,7 +5,7 @@
 -- Categorie
 INSERT INTO public.categories (id, name, subtitle, description, image_url, badge, display_order)
 VALUES 
-('panetteria', 'Panetteria & Focacce', 'La bontà della tradizione', 'Lievito madre vivo, farine 100% italiane macinate a pietra e lunghissima fermentazione naturale.', 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1000&q=80', 'Fresco ogni mattina', 1),
+('pasticceria', 'Pasticceria Artigianale', 'Piccoli momenti di felicità', 'Ciambelloni soffici, crostate rustiche, biscotti della nonna e dolci artigianali appena sfornati.', 'https://sfornami.dsc-italy.app/og-image.jpg', 'Fatto a mano', 1),
 ('pasticceria', 'Pasticceria Artigianale', 'Piccoli momenti di felicità', 'Brioche sfogliate al burro di centrifuga, crostate rustiche, biscotti da tè e l’autentico maritozzo romano.', 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1000&q=80', 'Fatto a mano', 2),
 ('torte-ordinazione', 'Torte su Ordinazione', 'Speciali come le tue occasioni', 'Millefoglie croccanti, torte da cerimonia, creazioni personalizzate per compleanni e anniversari.', 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1000&q=80', 'Personalizzabile', 3),
 ('specialita-stagionali', 'Specialità Stagionali', 'Tutto da scoprire', 'I dolci delle feste romane e italiane: panettoni, colombe, frappe, castagnole e creazioni a tiratura limitata.', 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1000&q=80', 'Edizione Limitata', 4)

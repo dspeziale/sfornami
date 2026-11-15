@@ -233,7 +233,7 @@ export const INITIAL_PRODUCTS: Product[] = [
       { name: 'Fritto Tradizionale alla Romana', priceModifier: 0 },
       { name: 'Vassoio da 6 Pezzi Misti', priceModifier: 14.00 },
     ],
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
     isAvailable: true,
     isFeatured: true,
     isSeasonal: true,
@@ -371,7 +371,7 @@ export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
   storyBtn2Link: '/torte-personalizzate',
   storyImages: [
     'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
+    'https://sfornami.dsc-italy.app/og-image.jpg',
     'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=600&q=80',
     'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=600&q=80',
   ],
@@ -411,7 +411,7 @@ export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
     {
       step: 1,
       title: 'Scegli le tue bontà',
-      text: 'Naviga tra pane, pizza alla pala, crostate, maritozzi e biscotti freschi sul catalogo interattivo.',
+      text: 'Naviga tra crostate, ciambelloni, torte fresche e biscotti artigianali sul catalogo interattivo.',
     },
     {
       step: 2,
@@ -435,7 +435,7 @@ export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
       zone: 'Campo de’ Fiori, Roma',
       rating: 5,
       date: 'Ieri',
-      text: 'Il miglior pane casereccio di Roma! Crosta croccante e mollica profumata che dura giorni. E il maritozzo con la panna montata sul momento è commovente!',
+      text: 'Il miglior ciambellone di Roma! Soffice, alto e profumato, perfetto per la colazione di tutta la famiglia. E le torte sono una meraviglia!',
     },
     {
       name: 'Lorenzo M.',
@@ -449,7 +449,7 @@ export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
       zone: 'Torraccia, Roma',
       rating: 5,
       date: 'La settimana scorsa',
-      text: 'La pizza bianca alla pala appena sfornata è una droga! Fragrante, salata al punto giusto, digeribilissima grazie alla lievitazione naturale. Bravi davvero!',
+      text: 'I dolci di SFORNAMÌ per Seul 2027 sono eccezionali! Torte freschissime e biscotti fragranti. Una bellissima iniziativa, bravi davvero!',
     },
   ],
 
@@ -464,8 +464,8 @@ export const INITIAL_HOMEPAGE_CONTENT: HomePageContent = {
       likes: 342,
     },
     {
-      img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
-      caption: '36 ore di lievito madre vivo. Il profumo del pane vero sfornato caldo a Torraccia. 🥖',
+      img: 'https://sfornami.dsc-italy.app/og-image.jpg',
+      caption: 'Insieme per Seul 2027! Il nostro ciambellone soffice sfornato caldo ogni mattina a Torraccia. 🧁✨',
       likes: 489,
     },
     {
