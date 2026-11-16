@@ -63,17 +63,22 @@ export default function CheckoutPage() {
     }
   }, [customer]);
 
-  const [tomorrow, setTomorrow] = useState('');
+  const [minDeliveryDateStr, setMinDeliveryDateStr] = useState('');
   const [requestedDate, setRequestedDate] = useState('');
   const [requestedTimeSlot, setRequestedTimeSlot] = useState('10:30 - 12:30 (Mattina)');
+
+  const minNoticeHours = settings.minDeliveryNoticeHours ?? 48;
 
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery');
 
   useEffect(() => {
-    const tmr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    setTomorrow(tmr);
-    setRequestedDate(tmr);
+    // Delivery requires at least 48 hours notice for fresh artisan preparation
+    const minTimestamp = Date.now() + minNoticeHours * 3600 * 1000;
+    const minD = new Date(minTimestamp);
+    const dateStr = minD.toISOString().split('T')[0];
+    setMinDeliveryDateStr(dateStr);
+    setRequestedDate(prev => (!prev || prev < dateStr ? dateStr : prev));
 
     DataService.getTimeSlots().then(slots => {
       setTimeSlots(slots);
@@ -82,7 +87,7 @@ export default function CheckoutPage() {
         setRequestedTimeSlot(deliverySlots[0].label);
       }
     });
-  }, []);
+  }, [minNoticeHours]);
 
   // Delivery fee calculation
   const deliveryFee = subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee;
@@ -108,6 +113,11 @@ export default function CheckoutPage() {
 
     if (!deliveryAddress) {
       setErrorMsg('Inserisci l’indirizzo completo per la consegna a domicilio a Roma.');
+      return;
+    }
+
+    if (!requestedDate || (minDeliveryDateStr && requestedDate < minDeliveryDateStr)) {
+      setErrorMsg(`La preparazione artigianale richiede almeno 48 ore di preavviso. Seleziona una data a partire da ${minDeliveryDateStr}.`);
       return;
     }
 
@@ -199,6 +209,11 @@ export default function CheckoutPage() {
 
     if (!deliveryAddress) {
       setErrorMsg('Inserisci l’indirizzo di consegna a Roma prima di ordinare su WhatsApp.');
+      return;
+    }
+
+    if (!requestedDate || (minDeliveryDateStr && requestedDate < minDeliveryDateStr)) {
+      setErrorMsg(`La preparazione artigianale richiede almeno 48 ore di preavviso. Seleziona una data a partire da ${minDeliveryDateStr}.`);
       return;
     }
 
@@ -620,12 +635,15 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="date"
-                  min={tomorrow}
+                  min={minDeliveryDateStr}
                   required
                   value={requestedDate}
                   onChange={e => setRequestedDate(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFF8EF] border border-[#F5A16C]/30 text-xs font-bold text-[#57382E]"
                 />
+                <p className="text-[10px] text-[#DE7E42] font-semibold flex items-center gap-1">
+                  <span>🕒 Consegna a partire da 48 ore dall&apos;ordine per garantire la preparazione artigianale fresca.</span>
+                </p>
               </div>
 
               <div className="space-y-1.5">

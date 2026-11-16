@@ -286,6 +286,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   minOrderDelivery: 15.00,
   deliveryFee: 3.50,
   freeDeliveryThreshold: 40.00,
+  minDeliveryNoticeHours: 48,
   servedCaps: ['00156', '00157', '00158', '00159', '00137', '00139', '00141', '00161', '00162', '00186', '00187', '00198'],
   stripeEnabled: false, // pronto per integrazione con credenziali
   pickupOpeningHours: 'Laboratorio di produzione: Consegne a domicilio Mar - Dom',

@@ -239,7 +239,7 @@ export default function AdminImpostazioniPage() {
                 </h4>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-3.5 rounded-xl border border-[#F5A16C]/25 shadow-xs">
                   <label className="font-bold text-[#57382E] block mb-1 text-xs">
                     Costo Base di Consegna (€)
@@ -293,14 +293,34 @@ export default function AdminImpostazioniPage() {
                     />
                   </div>
                 </div>
+
+                <div className="bg-white p-3.5 rounded-xl border border-[#F5A16C]/25 shadow-xs">
+                  <label className="font-bold text-[#57382E] block mb-1 text-xs">
+                    Preavviso Minimo Consegna
+                  </label>
+                  <p className="text-[10px] text-[#7E5649] mb-2">Ore minime di anticipo per preparare i dolci freschi.</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-[#57382E]">h</span>
+                    <input
+                      type="number"
+                      step="1"
+                      min="12"
+                      value={settings.minDeliveryNoticeHours ?? 48}
+                      onChange={e => setSettings({ ...settings, minDeliveryNoticeHours: parseInt(e.target.value, 10) || 48 })}
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#FFF8EF] border border-[#F5A16C]/30 font-black text-sm text-[#DE7E42]"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Dynamic Customer Preview Banner */}
-              <div className="p-3 bg-white rounded-xl border border-[#F5A16C]/30 text-xs flex items-center gap-2 text-[#57382E]">
-                <span className="text-base">💡</span>
-                <span>
-                  <strong>Regola attiva:</strong> Il cliente paga <strong>€{settings.deliveryFee.toFixed(2)}</strong> per la consegna. Se il carrello raggiunge o supera <strong>€{settings.freeDeliveryThreshold.toFixed(2)}</strong>, le spese di consegna diventano <strong>0.00 € (GRATIS)</strong>!
-                </span>
+              <div className="p-3 bg-white rounded-xl border border-[#F5A16C]/30 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[#57382E]">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">💡</span>
+                  <span>
+                    <strong>Regola attiva:</strong> Consegna <strong>€{settings.deliveryFee.toFixed(2)}</strong> (Gratis sopra <strong>€{settings.freeDeliveryThreshold.toFixed(2)}</strong>) • Preavviso minimo: <strong>{settings.minDeliveryNoticeHours ?? 48} ore</strong> dall'ordine.
+                  </span>
+                </div>
               </div>
             </div>
 

@@ -207,6 +207,7 @@ export interface StoreSettings {
   minOrderDelivery: number;
   deliveryFee: number;
   freeDeliveryThreshold: number;
+  minDeliveryNoticeHours?: number; // Minimum notice hours for delivery (e.g. 48 hours)
   servedCaps: string[];
   stripeEnabled: boolean;
   pickupOpeningHours: string;
