@@ -184,9 +184,16 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleWhatsAppOrder = () => {
+  const handleWhatsAppOrder = async () => {
+    setErrorMsg('');
+
+    if (items.length === 0) {
+      setErrorMsg('Il carrello è vuoto. Aggiungi prima dei prodotti.');
+      return;
+    }
+
     if (!customerName || !customerPhone) {
-      setErrorMsg('Inserisci almeno Nome e Numero di Telefono per compilare il messaggio WhatsApp.');
+      setErrorMsg('Inserisci almeno Nome e Numero di Telefono prima di inviare l’ordine su WhatsApp.');
       return;
     }
 
@@ -195,24 +202,102 @@ export default function CheckoutPage() {
       return;
     }
 
-    const waUrl = generateWhatsAppOrderMessage({
-      items,
-      customerName,
-      customerPhone,
-      deliveryType: 'delivery',
-      deliveryAddress,
-      deliveryCity,
-      deliveryCap,
-      requestedDate,
-      requestedTimeSlot,
-      notes,
-      subtotal,
-      deliveryFee,
-      total,
-      settings,
-    });
+    if (subtotal < settings.minOrderDelivery) {
+      setErrorMsg(`L'ordine minimo per la consegna a domicilio è di €${settings.minOrderDelivery.toFixed(2)}.`);
+      return;
+    }
 
-    window.open(waUrl, '_blank');
+    setLoading(true);
+
+    try {
+      const orderItems = items.map(item => {
+        const addonsTotal = (item.selectedAddons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+        const unitPrice = item.product.price + (item.selectedVariant?.priceModifier || 0) + addonsTotal;
+        return {
+          id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          productId: item.product.id,
+          productName: item.product.name,
+          variantName: item.selectedVariant?.name,
+          addons: item.selectedAddons,
+          notes: item.notes,
+          price: unitPrice,
+          quantity: item.quantity,
+          total: unitPrice * item.quantity,
+        };
+      });
+
+      const emailToUse = customerEmail.trim() || `${customerPhone.replace(/\D/g, '')}@whatsapp.sfornami.it`;
+
+      // 1. Save order to database so it immediately appears in the Admin panel!
+      const newOrder = await DataService.createOrder({
+        customerName,
+        customerEmail: emailToUse,
+        customerPhone,
+        deliveryType: 'delivery',
+        deliveryAddress,
+        deliveryCity,
+        deliveryCap,
+        requestedDate,
+        requestedTimeSlot,
+        notes: notes ? `${notes} (Inviato via WhatsApp)` : '(Inviato via WhatsApp)',
+        items: orderItems,
+        subtotal,
+        deliveryFee,
+        discount,
+        total,
+        paymentMethod: 'cash_on_delivery',
+        paymentStatus: 'pending',
+        status: 'nuovo',
+      });
+
+      // 2. Auto-register or update customer
+      try {
+        await registerCustomer({
+          name: customerName,
+          email: emailToUse,
+          phone: customerPhone,
+          address: deliveryAddress,
+          city: deliveryCity,
+          cap: deliveryCap,
+          notes,
+        });
+      } catch (userErr) {
+        console.warn('Customer auto-registration error:', userErr);
+      }
+
+      // 3. Clear cart
+      clearCart();
+
+      // 4. Generate WhatsApp Message with the OFFICIAL Order Number
+      const waUrl = generateWhatsAppOrderMessage({
+        items,
+        customerName,
+        customerPhone,
+        deliveryType: 'delivery',
+        deliveryAddress,
+        deliveryCity,
+        deliveryCap,
+        requestedDate,
+        requestedTimeSlot,
+        notes,
+        subtotal,
+        deliveryFee,
+        total,
+        orderNumber: newOrder.orderNumber,
+        settings,
+      });
+
+      // 5. Open WhatsApp in new tab
+      window.open(waUrl, '_blank');
+
+      // 6. Redirect to confirmation page
+      router.push(`/ordine-confermato?id=${newOrder.orderNumber}`);
+    } catch (err) {
+      console.error('Order creation error on WhatsApp order', err);
+      setErrorMsg('Si è verificato un errore durante la registrazione dell’ordine. Riprova.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {
